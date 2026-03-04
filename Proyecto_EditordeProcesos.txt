@@ -1,0 +1,545 @@
+Editor y visualizador de procesos¶ 
+El proyecto consiste en desarrollar un Sistema de Gestión de 
+Procesos multiempresa que permita a cada organización registrarse, crear su propio 
+espacio independiente y administrar usuarios con distintos roles (administrador, 
+editor y solo lectura). El sistema debe garantizar autenticación segura, control de 
+acceso por empresa y separación de la información, asegurando que los procesos 
+pertenezcan a la empresa y no a usuarios individuales. 
+La solución permitirá crear, editar, consultar y eliminar procesos organizacionales, 
+registrando información como nombre, descripción, categoría y estado (borrador o 
+publicado). Además, debe mantener historial de cambios y trazabilidad, permitir 
+búsquedas y filtros, y manejar eliminaciones lógicas (estado inactivo) para no perder 
+información histórica. Todo el modelo debe estar orientado a mantener consistencia 
+y control sobre la evolución de los procesos. 
+Finalmente, el sistema debe permitir el modelado estructurado de los procesos 
+mediante actividades, arcos y gateways (decisiones). Las actividades estarán 
+asociadas a roles funcionales definidos por la empresa, los arcos representarán la 
+secuencia del flujo y los gateways permitirán ramificaciones exclusivas, paralelas o 
+inclusivas. También se deberá gestionar la creación, edición, consulta y eliminación 
+de roles, validando que no estén en uso antes de eliminarlos y asegurando 
+coherencia en todo el diagrama del proceso. 
+Índice de Historias de Usuario¶ 
+HU-01 · Registro de empresa¶ 
+Resumen 
+Como representante de una empresa, quiero crear una cuenta empresarial para que 
+mi organización tenga un espacio propio donde administrar sus procesos. 
+Criterios de aceptación 
+• 
+Se solicita nombre de empresa, NIT (u otro identificador), correo de contacto. 
+• 
+Se genera un usuario administrador inicial. 
+• 
+La empresa queda registrada como entidad independiente. 
+HU-02 · Registro de usuario en empresa¶ 
+Resumen 
+Como administrador de empresa, quiero crear y gestionar cuentas de usuario dentro 
+de mi empresa para que diferentes colaboradores puedan aportar a la 
+documentación de procesos. 
+Criterios de aceptación 
+• 
+Puedo invitar usuarios por correo electrónico. 
+• 
+Puedo asignar roles (ej: administrador, editor, solo lectura). 
+• 
+Los procesos creados pertenecen a la empresa, no al usuario. 
+HU-03 · Inicio de sesión¶ 
+Resumen 
+Como usuario, quiero iniciar sesión en el sistema con mis credenciales para acceder 
+a los procesos de mi empresa. 
+Criterios de aceptación 
+• 
+Validación de correo y contraseña. 
+• 
+Acceso restringido a la empresa a la que pertenezco. 
+HU-04 · Crear proceso¶ 
+Resumen 
+Como usuario autorizado, quiero crear un proceso para registrar su información 
+básica y asociarlo a la empresa. 
+Criterios de aceptación 
+• 
+Se registra nombre, descripción y categoría. 
+• 
+El proceso queda asociado a la empresa. 
+• 
+El proceso puede estar en estado borrador o publicado.} 
+HU-05 · Editar proceso¶ 
+Resumen 
+Como usuario autorizado, quiero editar la información de un proceso para 
+mantenerla actualizada. 
+Criterios de aceptación 
+• 
+Solo usuarios con permisos de edición pueden modificar. 
+• 
+Se guarda historial de cambios. 
+HU-06 · Eliminar proceso¶ 
+Resumen 
+Como usuario administrador, quiero eliminar un proceso para mantener actualizada 
+la base de procesos de la empresa. 
+Criterios de aceptación 
+• 
+Confirmación antes de eliminar. 
+• 
+El proceso queda en estado inactivo para no perder trazabilidad. 
+HU-07 · Consultar procesos¶ 
+Resumen 
+Como usuario de la empresa, quiero ver la lista de procesos existentes para acceder 
+a sus detalles. 
+Criterios de aceptación 
+• 
+Lista con búsqueda y filtros (estado, categoría). 
+• 
+Posibilidad de visualizar un proceso y sus elementos (actividades, arcos, 
+gateways). 
+HU-08 · Crear actividad¶ 
+Resumen 
+Como usuario autorizado, quiero agregar actividades a un proceso para detallar las 
+tareas que lo componen. 
+Criterios de aceptación 
+• 
+Se especifica nombre y tipo de actividad. 
+HU-09 · Editar actividad¶ 
+Resumen 
+Como usuario autorizado, quiero modificar una actividad de un proceso para corregir 
+o actualizar información. 
+Criterios de aceptación 
+• 
+Los cambios se guardan en el historial del proceso. 
+HU-10 · Eliminar actividad¶ 
+Resumen 
+Como usuario administrador, quiero eliminar una actividad que ya no sea relevante 
+en un proceso. 
+Criterios de aceptación 
+• 
+Se solicita confirmación antes de eliminar. 
+• 
+El flujo del proceso se ajusta automáticamente. 
+HU-11 · Crear arco¶ 
+Resumen 
+Como usuario autorizado, quiero definir arcos de conexión entre 
+actividades/gateways para representar la secuencia del proceso. 
+Criterios de aceptación 
+• 
+Se define actividad de origen y destino. 
+• 
+El arco queda visible en el diagrama del proceso. 
+HU-12 · Editar arco¶ 
+Resumen 
+Como usuario autorizado, quiero modificar un arco existente para ajustar la lógica del 
+proceso. 
+Criterios de aceptación 
+• 
+Se permite cambiar origen/destino. 
+HU-13 · Eliminar arco¶ 
+Resumen 
+Como usuario administrador, quiero eliminar un arco cuando ya no corresponde en el 
+proceso. 
+Criterios de aceptación 
+• 
+Confirmación previa a la eliminación. 
+• 
+El diagrama se ajusta automáticamente. 
+HU-14 · Crear gateway¶ 
+Resumen 
+Como usuario autorizado, quiero agregar gateways a un proceso para definir puntos 
+de decisión y ramificación. 
+Criterios de aceptación 
+• 
+Se permite crear gateways exclusivos, paralelos o inclusivos. 
+• 
+Los arcos salientes deben estar correctamente definidos. 
+HU-15 · Editar gateway¶ 
+Resumen 
+Como usuario autorizado, quiero modificar un gateway existente para ajustar 
+condiciones de decisión. 
+Criterios de aceptación 
+• 
+Se pueden actualizar los tipos y condiciones de salida. 
+HU-16 · Eliminar gateway¶ 
+Resumen 
+Como usuario administrador, quiero eliminar un gateway cuando ya no sea necesario. 
+Criterios de aceptación 
+• 
+Confirmación antes de eliminar. 
+• 
+El flujo debe mantenerse consistente. 
+HU-17 · Crear rol de proceso¶ 
+Resumen 
+Como usuario autorizado, quiero crear roles dentro de la empresa (ej: Analista, 
+Supervisor, Auditor) para que las actividades de los procesos se asignen a funciones y 
+no a personas. 
+Criterios de aceptación 
+• 
+Se registra nombre del rol y descripción. 
+• 
+El rol queda asociado a la empresa y puede usarse en múltiples procesos. 
+HU-18 · Editar rol de proceso¶ 
+Resumen 
+Como usuario autorizado, quiero modificar un rol de proceso para actualizar su 
+nombre o descripción y que los procesos que lo referencian mantengan coherencia. 
+Criterios de aceptación 
+• 
+Los procesos mantienen la referencia al rol modificado. 
+HU-19 · Eliminar rol de proceso¶ 
+Resumen 
+Como administrador de empresa, quiero eliminar un rol de proceso que ya no se use 
+para simplificar la administración. 
+Criterios de aceptación 
+• 
+Se valida que el rol no esté asignado a ninguna actividad antes de eliminarlo. 
+• 
+Se solicita confirmación previa a la eliminación. 
+HU-20 · Consultar roles de proceso¶ 
+HU-21 · Configurar pool por empresa¶ 
+Resumen 
+Como administrador de la plataforma, quiero que cada empresa tenga su propio pool 
+(área de procesos) para mantener aislados los procesos y recursos entre 
+organizaciones, de modo que no se mezclen datos ni procesos entre empresas. 
+Criterios de aceptación 
+• 
+Existe una opción al crear/editar empresa para crear o asignar 
+un pool asociado. 
+• 
+Los procesos creados dentro de una empresa quedan asociados por defecto 
+al pool de esa empresa. 
+• 
+Usuarios de una empresa sólo ven y gestionan procesos pertenecientes al 
+pool de su empresa (se respeta separación multiempresa). 
+• 
+La creación/edición de pools queda limitada a roles con permiso (ej. 
+administrador de empresa). 
+Notas 
+• 
+Implementar validaciones para evitar asignar un proceso al pool de otra 
+empresa. 
+• 
+Registrar auditoría de creación/actualización del pool. 
+HU-22 · Diferenciar pool y lane (swimlane)¶ 
+Resumen 
+Como usuario que modela procesos, quiero distinguir entre pool (espacio 
+organizativo) y lane/swimlane (roles o áreas dentro de un pool) para poder representar 
+responsabilidades y responsabilidades por rol dentro de cada empresa. 
+Criterios de aceptación 
+• 
+La interfaz permite crear lanes dentro de un pool para reflejar roles o 
+departamentos. 
+• 
+Al asignar actividades, se puede seleccionar la lane responsable (y por tanto el 
+rol encargado). 
+• 
+Las lanes se muestran visualmente dentro del diagrama de proceso y su 
+persistencia queda ligada al pool. 
+• 
+Las reglas de visibilidad siguen la separación por pool; usuarios sólo pueden 
+ver lanes dentro de su pool. 
+Notas 
+• 
+Documentar la diferencia conceptual entre pool (borde de proceso) y lane 
+(organización interna por responsabilidades). 
+HU-23 · Compartir procesos entre pools (alcance y límites)¶ 
+Resumen 
+Como arquitecto de procesos, quiero establecer reglas claras para compartir o no 
+compartir procesos entre pools (empresas), definiendo permisos y límites, para 
+soportar escenarios de colaboración controlada sin romper el aislamiento de datos. 
+Criterios de aceptación 
+• 
+Existe una política configurable que define si un proceso puede marcarse 
+como compartido y qué pools pueden acceder a él. 
+• 
+Solo usuarios con permiso global (o administrador) pueden marcar un proceso 
+como compartido. 
+• 
+El acceso a procesos compartidos respeta permisos: sólo lectura o 
+lectura/edición según rol asignado. 
+• 
+Se registra auditoría cuando un proceso cambia su estado de 
+visibilidad/compartición. 
+Notas 
+• 
+Por defecto, los procesos no son compartidos para preservar separación 
+multiempresa. 
+HU-24 · Asociar roles y permisos a un pool¶ 
+Resumen 
+Como administrador de empresa, quiero asociar roles (por ejemplo administrador, 
+editor, lector) al pool de mi empresa y definir permisos por rol, para controlar qué 
+acciones pueden realizar los usuarios sobre los procesos dentro del pool. 
+Criterios de aceptación 
+• 
+Existe una gestión de roles a nivel de pool donde crear/editar/eliminar roles 
+específicos de la empresa. 
+• 
+Cada rol tiene permisos configurables (crear proceso, editar, eliminar, 
+publicar, gestionar roles). 
+• 
+Los usuarios se asignan a roles dentro del pool y obtienen permisos en 
+consecuencia. 
+• 
+Las acciones en la UI y en la API respetan los permisos definidos por rol. 
+Notas 
+• 
+Evitar que la eliminación de un rol deje procesos sin propietario; requerir 
+reasignación previa. 
+HU-25 · Enviar mensaje entre procesos (Message Throw)¶ 
+Resumen 
+Como diseñador de procesos, quiero poder lanzar (throw) un message desde un 
+proceso para notificar o activar otra instancia de proceso, de modo que se puedan 
+orquestar flujos distribuidos entre procesos independientes. 
+Criterios de aceptación 
+• 
+Existe una tarea o evento de tipo Message Throw que permite definir el nombre 
+del mensaje y los datos payload. 
+• 
+Otro proceso con un Message Catch configurado con el mismo nombre puede 
+iniciarse o recibir el mensaje en tiempo de ejecución. 
+• 
+El envío incluye payload (JSON) opcional que puede mapearse a variables del 
+proceso receptor. 
+• 
+Se registran eventos de envío y recepción para trazabilidad. 
+Notas 
+• 
+Definir claramente el comportamiento cuando no hay receptor: fallback 
+(guardar, reintentar o error). 
+HU-26 · Envío de notificaciones externas (mensaje a sistema externo)¶ 
+Resumen 
+Como integrador, quiero que un proceso pueda enviar mensajes a sistemas externos 
+(ej. correo, colas, APIs) para notificar eventos o invocar servicios fuera del motor de 
+procesos. 
+Criterios de aceptación 
+• 
+Existe una tarea de integración que envía un mensaje a un destino externo 
+configurable (SMTP, webhook, broker). 
+• 
+La tarea admite mapeo de variables del proceso al payload del mensaje. 
+• 
+Se manejan y registran errores de entrega; existe política de reintento 
+configurable. 
+• 
+Los destinos requieren credenciales/secretos seguros gestionados por la 
+configuración del entorno. 
+Notas 
+• 
+Separar conectores por tipo (email, webhook, queue) y exponer adaptadores 
+para facilitar pruebas. 
+HU-27 · Recibir mensaje y activar proceso (Message Catch)¶ 
+Resumen 
+Como diseñador de procesos, quiero que un proceso pueda tener un Message 
+Catch que reciba mensajes externos o de otros procesos y ejecute actividades en 
+respuesta, de modo que el motor pueda reaccionar a eventos asíncronos. 
+Criterios de aceptación 
+• 
+Se pueden definir Message Catch en el diagrama con el nombre del mensaje 
+esperado. 
+• 
+Cuando llega un mensaje con el nombre y correlación adecuados, se activa la 
+instancia de proceso o se continúa la ejecución en la instancia existente. 
+• 
+El mensaje entrante puede mapearse a variables del proceso receptor. 
+• 
+El sistema valida la firma o credenciales del emisor cuando el mensaje 
+proviene de una fuente externa. 
+Notas 
+• 
+Implementar pautas de seguridad y validación para evitar inyección de datos 
+por mensajes externos. 
+HU-28 · Correlación de mensajes con instancias de proceso¶ 
+Resumen 
+Como operador de procesos, quiero que los mensajes entrantes se correlacionen 
+correctamente con instancias de proceso (por ejemplo usando un businessKey o 
+variables), para asegurar que la información alcance la instancia correcta y no inicie 
+procesos duplicados. 
+Criterios de aceptación 
+• 
+Existe una regla de correlación configurable (por businessKey, expresión o 
+variable de correlación) usada por Message Catch. 
+• 
+Si la correlación encuentra una instancia en espera, el mensaje se entrega a 
+esa instancia; si no, se puede iniciar una nueva instancia si está configurado. 
+• 
+Se registran eventos de correlación y casos no correlacionados para 
+diagnóstico. 
+• 
+En caso de múltiples coincidencias, se aplica una política definida (error, 
+entregar a la primera, o crear nueva instancia). 
+Notas 
+• 
+Probar escenarios de correlación con datos de alta concurrencia para evitar 
+condiciones de carrera. 
+Entregas del proyecto¶ 
+El proyecto del semestre se desarrollará de manera incremental y será evaluado a 
+través de tres entregas principales, cada una con objetivos y criterios específicos, 
+orientados a validar la correcta aplicación de los conceptos vistos en clase. 
+ENTREGA 1 – BACKEND¶ 
+El objetivo de esta entrega es que el estudiante diseñe e implemente un backend 
+estructurado, aplicando el patrón MVC y buenas prácticas de desarrollo. Se busca 
+evaluar la capacidad de modelar el dominio del problema, exponer servicios REST 
+claros y mantenibles, y establecer una base sólida sobre la cual se integrará el 
+frontend y la seguridad en las siguientes fases. 
+Criterio 
+Descripción 
+Porcentaje 
+Entidades 
+Definición correcta del modelo de dominio, incluyendo 
+entidades, atributos y relaciones entre empresas, 
+usuarios y procesos. 
+15% 
+Repositorios 
+Implementación de repositorios para el acceso y 
+persistencia de datos, utilizando correctamente JPA y 
+consultas básicas. 
+10% 
+Servicios 
+Implementación de la lógica de negocio para la 
+visualización y edición de procesos, asegurando una 
+correcta separación de responsabilidades. 
+20% 
+DTO 
+Uso de DTO para el intercambio de datos entre capas, 
+evitando la exposición directa de entidades. 
+10% 
+Criterio 
+Descripción 
+Porcentaje 
+Controladores 
+Implementación de controladores REST claros y 
+coherentes, con endpoints funcionales para las 
+operaciones del sistema. 
+10% 
+Manejo de 
+excepciones 
+Gestión centralizada de errores y respuestas 
+adecuadas ante fallos o datos inválidos. 
+7% 
+ModelMapper y 
+Lombok 
+Uso adecuado de herramientas para reducir código 
+repetitivo y mejorar la mantenibilidad. 
+5% 
+Pruebas 
+unitarias 
+Implementación de pruebas básicas para validar la 
+lógica principal del backend. 
+10% 
+Despliegue 
+El backend compila, ejecuta correctamente y está 
+disponible para ser consumido por el frontend. 
+5% 
+Ingeniería de 
+software 
+Organización del proyecto, claridad del código, 
+nombres adecuados y buenas prácticas generales. 
+Resultado Sonarqube. Git. 
+ 
+ 
+Entrega 2 – Frontend¶ 
+En esta entrega se evalúa la capacidad del estudiante para desarrollar una interfaz 
+web funcional que consuma servicios REST existentes. El énfasis está en 
+la integración frontend–backend, el manejo de formularios, la visualización y 
+edición de información, y la construcción de flujos de navegación coherentes. Esta 
+entrega valida que el estudiante comprenda cómo interactúan las capas del sistema 
+dentro de una arquitectura web completa. 
+Criterio 
+Descripción 
+Porcentaje 
+Componentes 
+Implementación de componentes reutilizables y 
+bien estructurados para la visualización y edición 
+de procesos. 
+20% 
+Servicios 
+Consumo correcto de los servicios REST del 
+backend, manejo de peticiones HTTP y 
+procesamiento de respuestas. 
+20% 
+Modelos 
+Definición y uso adecuado de modelos/interfaces 
+para representar la información de empresas, 
+usuarios y procesos. 
+10% 
+Manejo de 
+información entre 
+componentes 
+Uso correcto de mecanismos de comunicación 
+(Input/Output, servicios compartidos, estado) 
+para el flujo de datos entre componentes. 
+10% 
+Funcionalidad 
+Correcto funcionamiento del visor y editor de 
+procesos, cumpliendo los casos de uso definidos. 
+15% 
+Librerías externas 
+Uso justificado y adecuado de librerías externas 
+para mejorar la funcionalidad o experiencia de 
+usuario. 
+5% 
+Despliegue 
+La aplicación frontend compila, ejecuta y se 
+integra correctamente con el backend. 
+10% 
+Criterio 
+Descripción 
+Porcentaje 
+Ingeniería de 
+software 
+Organización del proyecto, claridad del código, 
+nombres adecuados y aplicación de buenas 
+prácticas generales. esultado Sonarqube. Git. 
+10% 
+ 
+Entrega Final – Seguridad¶ 
+La entrega final tiene como propósito que el estudiante demuestre una comprensión 
+integral de la seguridad en aplicaciones web, particularmente en escenarios 
+multiempresa. Se evalúa la implementación de autenticación y autorización 
+basada en JWT, garantizando el aislamiento de la información entre empresas y 
+usuarios, así como la integración completa del sistema. Esta fase busca consolidar 
+los conocimientos adquiridos y acercar al estudiante a un escenario real de 
+desarrollo profesional. 
+Criterio 
+Descripción 
+Porcentaje 
+Autenticación 
+Implementación correcta del mecanismo de 
+autenticación basado en JWT, incluyendo login, 
+generación y validación de tokens. 
+25% 
+Autorización 
+Control de acceso a los recursos según empresa y 
+usuario, garantizando el aislamiento de la información 
+entre organizaciones. 
+20% 
+Funcionalidad 
+total 
+Funcionamiento completo e integrado del visor y editor 
+de procesos, incluyendo frontend, backend y 
+seguridad. 
+20% 
+Criterio 
+Descripción 
+Porcentaje 
+Métricas 
+Inclusión de métricas básicas o información de control 
+(por ejemplo, uso, estados, conteos o trazabilidad 
+mínima) que evidencien control sobre la aplicación. 
+10% 
+Pruebas 
+Implementación de pruebas básicas relacionadas con 
+seguridad y funcionamiento general (unitarias o de 
+integración). 
+10% 
+Despliegue final 
+Aplicación desplegada correctamente, accesible y 
+funcional en un entorno definido (local o remoto). 
+5% 
+Presentación 
+Presentación clara del proyecto, explicación de la 
+arquitectura, seguridad implementada y demostración 
+funcional. 
+5% 
+Ingeniería de 
+software 
+Calidad general del código, organización del proyecto, 
+claridad, mantenibilidad y buenas prácticas. 
+5% 
+ 
+ 
+ 
+ 

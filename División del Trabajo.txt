@@ -1,0 +1,444 @@
+División del Trabajo  
+ 
+Fase 1: Backend Totalmente Funcional (Semanas 1 - 4) 
+Fecha límite: 24 de marzo. En esta etapa, los 7 desarrolladores trabajarán exclusivamente en 
+Java/Spring, asegurando el uso de Lombok, ModelMapper, DTOs y JPA. 
+●​ Semana 1: Cimientos Multiempresa. Registro de empresas (HU-01), usuarios (HU-02) e 
+inicio de sesión básico (HU-03). Definición de entidades y relaciones base. 
+●​ Semana 2: Gestión de Procesos y Roles. CRUD de procesos (HU-04 a HU-07) y roles 
+funcionales (HU-17 a HU-20). Implementación de la lógica de "eliminación lógica". 
+●​ Semana 3: El Motor del Diagrama. Lógica backend para actividades (HU-08 a HU-10), 
+arcos (HU-11 a HU-13) y gateways (HU-14 a HU-16). 
+●​ Semana 4: Orquestación y Pools. Configuración de Pools (HU-21) y mensajería entre 
+procesos (HU-25 a HU-28). 
+○​ Criterio de éxito: Entrega del Backend con manejo centralizado de excepciones y 
+pruebas unitarias.​
+ 
+ 
+🎨 Fase 2: Frontend Integrado (Semanas 5 - 9) 
+Fecha límite: 07 de mayo. Aquí todos migramos a la construcción de la interfaz, consumiendo los 
+servicios REST creados en la fase anterior. 
+●​ Semana 5: Estructura y Dashboards. Creación de componentes para visualizar empresas y 
+listas de procesos (HU-07). 
+●​ Semana 6: Formularios y Gestión. Interfaces para creación de procesos, usuarios y roles 
+(HU-01, HU-02, HU-04, HU-17). 
+●​ Semana 7: El Editor Visual (Pools y Lanes). Implementación visual de Pools y Lanes 
+(HU-22) y asignación de responsabilidades. 
+●​ Semana 8: Modelado Estructurado. Interfaz para "dibujar" actividades, arcos y gateways 
+(HU-08, HU-11, HU-14). 
+●​ Semana 9: Integración de Flujos. Pruebas de comunicación entre componentes y 
+visualización de la trazabilidad (HU-05). 
+○​ Criterio de éxito: Editor funcional que permite modelar un proceso completo 
+visualmente. 
+ 
+🛡️ Fase 3: Seguridad y Entrega Final (Semanas 10 - 11) 
+Fecha límite: 19 de mayo. El cierre se enfoca en el "blindaje" del sistema y la validación de la 
+arquitectura multiempresa. 
+●​ Semana 10: Seguridad JWT y Aislamiento. Implementación de autenticación JWT y 
+control de acceso (HU-24). Asegurar que un usuario solo vea datos de su pool. 
+●​ Semana 11: Colaboración y Métricas. Implementación de procesos compartidos (HU-23), 
+auditoría, métricas de uso y preparación de la presentación final. 
+○​ Criterio de éxito: Sistema desplegado, seguro y con reporte de SonarQube sin 
+errores críticos.​
+ 
+ 
+📋 Dinámica de Trabajo y Evaluación 
+Para cumplir con los criterios de Ingeniería de Software, seguiremos estas reglas estrictas: 
+Actividad 
+Frecuencia 
+Propósito 
+Daylist (Martes/Jueves) 
+Bi-semanal 
+Cada desarrollador presenta su avance de código y 
+bloqueos. 
+Code Review 
+Semanal 
+Revisión cruzada para asegurar el uso de Lombok y 
+DTOs. 
+SonarQube Scan 
+Semanal 
+Mantener la calidad del código y limpieza de "deuda 
+técnica". 
+Unit Testing 
+Semanal 
+Cada nueva funcionalidad debe incluir su prueba 
+básica. 
+ 
+Fase 1: Backend (Semanas 1 - 4) 
+Objetivo: API REST funcional, persistencia y lógica de negocio. Criterios clave: JPA, DTOs, 
+ModelMapper, Lombok, Excepciones y Pruebas. 
+Semanas 1 y 2: El Núcleo Multiempresa y CRUDs Base 
+●​ Dev 1: Entidad Empresa y NIT; lógica de registro independiente (HU-01). 
+●​ Dev 2: Seguridad base y sesión; validación de credenciales (HU-03). 
+●​ Dev 3: Gestión de usuarios por empresa y asignación de roles (HU-02). 
+●​ Dev 4: Entidad Proceso y estados (Borrador/Publicado) (HU-04). 
+●​ Dev 5: Lógica de edición y eliminación lógica (inactivo) de procesos (HU-05, HU-06). 
+●​ Dev 6: Gestión de roles de proceso y validación de uso (HU-17, HU-18, HU-19). 
+●​ Dev 7: Sistema de búsqueda y filtros por categoría/estado (HU-07). 
+Semanas 3 y 4: Modelado de Flujo y Mensajería 
+●​ Dev 1: Lógica de Pools por empresa (HU-21). 
+●​ Dev 2: CRUD de Actividades y tipos (HU-08, HU-09, HU-10). 
+●​ Dev 3: Gestión de Arcos (Origen/Destino) y auto-ajuste (HU-11, HU-12, HU-13). 
+●​ Dev 4: Gateways exclusivos, paralelos e inclusivos (HU-14, HU-15, HU-16). 
+●​ Dev 5: Eventos Message Throw y Payload JSON (HU-25). 
+●​ Dev 6: Message Catch y activación de instancias (HU-27). 
+●​ Dev 7: Correlación de mensajes (BusinessKey) y notificaciones externas (HU-28, HU-26). 
+ 
+🎨 Fase 2: Frontend (Semanas 5 - 9) 
+Objetivo: Interfaz funcional e integrada con el Backend. Criterios clave: Componentes reutilizables, 
+Servicios HTTP, Modelos y Comunicación. 
+Semanas 5 y 6: Dashboards y Gestión Administrativa 
+●​ Dev 1: Componente de Login y Registro de Empresa. 
+●​ Dev 2: Panel de administración de usuarios y roles de la empresa. 
+●​ Dev 3: Vista de lista de procesos con filtros dinámicos. 
+●​ Dev 4: Formulario de creación y edición de metadatos del proceso. 
+●​ Dev 5: Servicio global de comunicación con la API (Interceptors). 
+●​ Dev 6: Modelado de interfaces/interfaces TypeScript para todo el dominio. 
+●​ Dev 7: Sistema de alertas y manejo visual de errores del backend. 
+Semanas 7, 8 y 9: El Editor Visual de Procesos 
+●​ Dev 1: Lienzo (Canvas) base y visualización de Pools. 
+●​ Dev 2: Implementación de Lanes (Swimlanes) dentro de los pools (HU-22). 
+●​ Dev 3: Renderizado dinámico de Actividades y sus tipos. 
+●​ Dev 4: Herramienta para dibujar Arcos (conexiones) entre elementos. 
+●​ Dev 5: Implementación visual de Gateways y sus ramificaciones. 
+●​ Dev 6: Panel de propiedades para configurar Mensajes (Throw/Catch). 
+●​ Dev 7: Lógica de persistencia del diagrama (Guardado automático en BD). 
+ 
+🛡️ Fase 3: Seguridad y Cierre (Semanas 10 - 11) 
+Objetivo: Blindaje multiempresa, JWT y métricas finales. 
+Semanas 10 y 11: Seguridad y Pulido Final 
+●​ Dev 1: Implementación de JWT (Generación y validación de tokens). 
+●​ Dev 2: Autorización y control de acceso por roles (Admin/Editor/Lector). 
+●​ Dev 3: Aislamiento total de datos (asegurar que un pool solo sea visto por su empresa). 
+●​ Dev 4: Lógica de procesos compartidos entre pools (HU-23). 
+●​ Dev 5: Asignación de permisos específicos a nivel de Pool (HU-24). 
+●​ Dev 6: Implementación de métricas (conteo de procesos, estados, trazabilidad). 
+●​ Dev 7: Pruebas de integración finales y preparación del despliegue. 
+¡Excelente equipo! Como su Scrum Master, aquí tienen el Diccionario de Datos técnico para 
+arrancar el Sprint 1. Este diseño asegura el cumplimiento de la arquitectura multiempresa y la 
+trazabilidad exigida. 
+Cada desarrollador debe mapear estas entidades usando JPA, Lombok para reducir código repetitivo 
+y DTOs para la exposición en los controladores. 
+ 
+🗄️ Diccionario de Datos Inicial 
+1. Entidades de Estructura Organizacional 
+Tabla 
+Atributos Clave 
+Descripción 
+HU 
+Relacionada 
+Empresa 
+id, nit, nombre, 
+correo_contacto 
+Entidad independiente que posee los 
+procesos. 
++2 
+HU-01 
+Usuario 
+id, email, password, 
+rol_sistema 
+Usuarios con roles de Administrador, 
+Editor o Solo Lectura. 
++3 
+HU-02, HU-03 
++1 
+Pool 
+id, empresa_id, nombre 
+Espacio aislado por empresa para 
+contener procesos. 
++3 
+HU-21 
+2. Entidades de Definición de Procesos 
+Tabla 
+Atributos Clave 
+Descripción 
+HU 
+Relacionada 
+Proceso 
+id, pool_id, nombre, 
+descripcion, categoria, 
+estado 
+Soporta estados: Borrador, 
+Publicado o Inactivo 
+(eliminación lógica). 
++2 
+HU-04, HU-06 
++1 
+Lane 
+id, proceso_id, 
+rol_proceso_id, nombre 
+Organización interna de 
+responsabilidades dentro de un 
+proceso. 
++1 
+HU-22 
+Rol_Proceso 
+id, empresa_id, nombre, 
+descripcion 
+Roles funcionales (Analista, 
+Supervisor) asociados a la 
+empresa. 
++3 
+HU-17 
+3. Entidades del Modelado (Diagrama) 
+Tabla 
+Atributos Clave 
+Descripción 
+HU 
+Relacionada 
+Actividad 
+id, lane_id, nombre, 
+tipo_actividad 
+Tareas que componen el proceso, 
+ligadas a un Lane/Rol. 
++2 
+HU-08 
+Gateway 
+id, proceso_id, tipo 
+Puntos de decisión: Exclusivo, 
+Paralelo o Inclusivo. 
+HU-14 
++1 
+Arco 
+id, origen_id, destino_id 
+Define la secuencia del flujo entre 
+actividades y gateways. 
++1 
+HU-11 
+4. Entidades de Comunicación y Auditoría 
+Tabla 
+Atributos Clave 
+Descripción 
+HU 
+Relacionada 
+Mensaje 
+id, nombre, 
+payload_json, tipo 
+Soporta eventos Message 
+Throw y Catch para 
+orquestación. 
++2 
+HU-25, HU-27 
++1 
+Historial_Cambios 
+id, proceso_id, 
+usuario_id, fecha, 
+cambio 
+Registro obligatorio para 
+trazabilidad de la evolución 
+del proceso. 
++2 
+HU-05, HU-09 
++1 
+ 
+ 
+🛠️ Tareas Técnicas por Desarrollador (Sprint 1 - Semana 1) 
+Para que el martes tengamos el primer daylist con código, cada uno debe crear las siguientes clases 
+en el Backend: 
+1.​ Dev 1 (Empresas): Crear EmpresaEntity, EmpresaRepository y el servicio de registro 
+validando el NIT. 
+2.​ Dev 2 (Usuarios): Implementar UsuarioEntity y la lógica de encriptación de contraseñas para 
+el login. 
+3.​ Dev 3 (Pools/Lanes): Mapear la relación @OneToMany entre Empresa y Pool, y de Pool a 
+Lane. 
+4.​ Dev 4 (Procesos): Crear ProcesoEntity con los estados (Enum) y la relación con el Pool. 
+5.​ Dev 5 (Roles de Proceso): Implementar el CRUD de RolProceso asegurando que pertenezcan 
+a la empresa. 
+6.​ Dev 6 (Configuración Base): Configurar ModelMapper, Lombok y el Manejador Global de 
+Excepciones (@ControllerAdvice). 
+7.​ Dev 7 (Infraestructura): Configurar el proyecto en Git, conectar a la base de datos y 
+configurar el reporte de SonarQube. 
+¡Claro que sí, equipo! Como su Scrum Master, he desglosado el plan maestro. Este 
+cronograma asigna una carga de trabajo equitativa para los 7 desarrolladores, asegurando 
+que cada uno tenga entregables tangibles para los daylists de los martes y jueves. 
+Aquí tienes la hoja de ruta técnica semana a semana para cumplir con las 28 Historias de 
+Usuario (HU) y los criterios de evaluación del proyecto. 
+ 
+🏗️ Fase 1: Backend Totalmente Funcional (Semanas 1 - 
+4) 
+Hito: Entrega 1 - 24 de marzo. Se evalúa: Entidades, Repositorios, Servicios, DTOs, 
+Excepciones, ModelMapper, Lombok, Pruebas Unitarias y SonarQube . 
+ 
+Semana 1: Identidad y Estructura Base 
+●​ Dev 1: Registro de Empresa y NIT (HU-01). 
+●​ Dev 2: Entidad Usuario y lógica de Invitación por correo (HU-02). 
+●​ Dev 3: Autenticación base: Validación de credenciales (HU-03). 
+●​ Dev 4: Configuración de Auditoría y Historial de Cambios (HU-05). 
+●​ Dev 5: Configuración de Lombok, ModelMapper y Estándar de DTOs. 
+●​ Dev 6: Manejador Global de Excepciones y Respuestas REST. 
+●​ Dev 7: Configuración de Git, Base de Datos y Pipeline de SonarQube. 
+Semana 2: Organización y Metadatos de Procesos 
+●​ Dev 1: Gestión de Pools por empresa (HU-21). 
+●​ Dev 2: Diferenciación técnica entre Pool y Lane (HU-22). 
+●​ Dev 3: CRUD de Roles de Proceso (HU-17, HU-18). 
+●​ Dev 4: Lógica de validación de roles no usados antes de eliminar (HU-19). 
+●​ Dev 5: Creación y asociación de Proceso a Empresa (HU-04). 
+●​ Dev 6: Consultas de procesos con filtros de categoría y estado (HU-07). 
+●​ Dev 7: Lógica de Eliminación Lógica (Estado Inactivo) (HU-06). 
+Semana 3: El Motor de Modelado (Nodos y Arcos) 
+●​ Dev 1: Lógica de Actividades: Nombre y Tipo (HU-08, HU-09). 
+●​ Dev 2: Lógica de Arcos: Definición origen/destino (HU-11, HU-12). 
+●​ Dev 3: Lógica de Gateways: Exclusivos, Paralelos e Inclusivos (HU-14, HU-15). 
+●​ Dev 4: Ajuste automático del flujo al eliminar actividades (HU-10). 
+●​ Dev 5: Consistencia del flujo al eliminar gateways (HU-16). 
+●​ Dev 6: Ajuste automático del diagrama al eliminar arcos (HU-13). 
+●​ Dev 7: Pruebas unitarias para la lógica de grafos/flujos. 
+Semana 4: Orquestación, Mensajería y Cierre Backend 
+●​ Dev 1: Implementación de Message Throw con Payload JSON (HU-25). 
+●​ Dev 2: Implementación de Message Catch y activación de procesos (HU-27). 
+●​ Dev 3: Reglas de Correlación de mensajes por BusinessKey (HU-28). 
+●​ Dev 4: Envío de notificaciones externas (Webhooks/Email) (HU-26). 
+●​ Dev 5: Lógica de Procesos Compartidos entre pools (HU-23). 
+●​ Dev 6: Gestión de roles y permisos específicos del Pool (HU-24). 
+●​ Dev 7: Refactorización final para cumplir métricas de SonarQube. 
+ 
+🎨 Fase 2: Frontend Integrado (Semanas 5 - 9) 
+Hito: Entrega 2 - 07 de mayo. Se evalúa: Componentes, Servicios REST, 
+Modelos/Interfaces, Comunicación entre componentes y Funcionalidad del Editor . 
+Semana 5: UI Administrativa y Shell 
+●​ Dev 1-2: Pantallas de Login y Registro de Empresa. 
+●​ Dev 3-4: Dashboard de gestión de Usuarios y Roles de empresa. 
+●​ Dev 5: Creación de Servicios HTTP base y manejo de errores visuales. 
+●​ Dev 6: Definición de Interfaces/Modelos TypeScript para todo el dominio. 
+●​ Dev 7: Maquetación del layout principal y navegación. 
+Semana 6: Gestión de Procesos (CRUD UI) 
+●​ Dev 1-2: Vista de lista de procesos con búsqueda y filtros. 
+●​ Dev 3-4: Formulario de creación/edición de procesos. 
+●​ Dev 5-6: Implementación del Historial de Cambios visual. 
+●​ Dev 7: Diálogos de confirmación y feedback de usuario. 
+Semana 7: El Lienzo de Modelado (Pools y Lanes) 
+●​ Dev 1-3: Implementación del Canvas base y renderizado de Pools. 
+●​ Dev 4-6: Implementación de Lanes dentro de los Pools y asignación de roles. 
+●​ Dev 7: Lógica de drag-and-drop inicial para elementos del proceso. 
+Semana 8: Modelado de Nodos y Conexiones 
+●​ Dev 1-2: Renderizado y edición de Actividades y Gateways en el lienzo. 
+●​ Dev 3-4: Herramienta de conexión (Arcos) entre nodos. 
+●​ Dev 5-6: Panel de propiedades lateral para configurar cada nodo (nombres, tipos). 
+●​ Dev 7: Persistencia del diagrama: Guardado automático en el Backend. 
+Semana 9: Integración y Refinamiento 
+●​ Dev 1-3: Implementación visual de los eventos de Mensajería (Throw/Catch). 
+●​ Dev 4-5: Pruebas de integración Frontend-Backend (End-to-End). 
+●​ Dev 6-7: Optimización de componentes y cumplimiento de estándares de 
+SonarQube. 
+ 
+🛡️ Fase 3: Seguridad y Entrega Final (Semanas 10 - 11) 
+Hito: Entrega Final - 19 de mayo. Se evalúa: JWT, Autorización multiempresa, Métricas y 
+Despliegue . 
+Semana 10: Blindaje de Seguridad 
+●​ Dev 1-2: Implementación completa de JWT (Login, generación y validación). 
+●​ Dev 3-4: Autorización: Control de acceso por Empresa y Rol (Admin/Editor/Lector). 
+●​ Dev 5-6: Interceptores de seguridad para asegurar el aislamiento de información. 
+●​ Dev 7: Pruebas de penetración básicas y validación de seguridad. 
+Semana 11: Métricas, Auditoría y Presentación 
+●​ Dev 1-2: Implementación del módulo de Métricas (Conteos, estados, trazabilidad). 
+●​ Dev 3-4: Pulido de la funcionalidad de Procesos Compartidos (HU-23). 
+●​ Dev 5: Documentación final de la arquitectura y el modelo de datos. 
+●​ Dev 6: Preparación del entorno de despliegue final. 
+●​ Dev 7: Revisión de Ingeniería de Software (Clean Code y SonarQube final). 
+ 
+Próximo paso: Este es el plan de vuelo. ¿Deseas que profundice en los 
+Criterios de Aceptación específicos para el daylist de este primer martes 
+para los desarrolladores 1, 2 y 3? 
+¡Entendido, equipo! Como su Scrum Master, he diseñado la hoja de ruta integral. He 
+dividido las 11 semanas en Sprints de 2 semanas (a excepción del último tramo de cierre). 
+Cada desarrollador tiene una tarea específica por semana para garantizar que en los 
+martes y jueves tengamos material para el daylist. 
+ 
+🚀 FASE 1: BACKEND TOTALMENTE FUNCIONAL (Semanas 1 - 4) 
+Meta: Entrega 1 (24 de marzo). 100% Lógica de servidor, API y Persistencia. 
+Semana 1: Sprint 1 (Inicio) - Estructura y Seguridad Base 
+●​ Dev 1: Entidad Empresa, validación de NIT y registro (HU-01). 
+●​ Dev 2: Entidad Usuario y lógica de invitación/creación (HU-02). 
+●​ Dev 3: Implementación de Seguridad Spring Security básica (HU-03). 
+●​ Dev 4: Entidad Proceso (Metadatos: Nombre, categoría, estado) (HU-04). 
+●​ Dev 5: Lógica de Auditoría: Historial de cambios (HU-05). 
+●​ Dev 6: Setup de infraestructura: Gitflow, SonarQube y Base de Datos. 
+●​ Dev 7: Configuración de DTOs, ModelMapper y Manejo Global de Excepciones. 
+Semana 2: Sprint 1 (Cierre) - Organización Organizacional 
+●​ Dev 1: Implementación de Pools por empresa (HU-21). 
+●​ Dev 2: Implementación de Lanes dentro de los procesos (HU-22). 
+●​ Dev 3: CRUD de Roles de Proceso (HU-17, HU-18). 
+●​ Dev 4: Validación: No permitir borrar roles en uso (HU-19). 
+●​ Dev 5: Buscador de procesos con filtros dinámicos (HU-07). 
+●​ Dev 6: Lógica de Eliminación Lógica (Estado Inactivo) (HU-06). 
+●​ Dev 7: Creación de Repositorios JPA y Pruebas Unitarias iniciales. 
+Semana 3: Sprint 2 (Inicio) - El Motor del Diagrama (Nodos) 
+●​ Dev 1: Gestión de Actividades (CRUD y tipos) (HU-08, HU-09). 
+●​ Dev 2: Lógica de Arcos (Conexión origen-destino) (HU-11, HU-12). 
+●​ Dev 3: Lógica de Gateways (Exclusivo, Paralelo, Inclusivo) (HU-14, HU-15). 
+●​ Dev 4: Reajuste automático al eliminar Actividades (HU-10). 
+●​ Dev 5: Consistencia de flujo al eliminar Gateways (HU-16). 
+●​ Dev 6: Reajuste del diagrama al eliminar Arcos (HU-13). 
+●​ Dev 7: Servicios de validación de grafos (Evitar flujos rotos). 
+Semana 4: Sprint 2 (Cierre) - Mensajería y Entrega Backend (24 Mar) 
+●​ Dev 1: Implementación Message Throw + Payload JSON (HU-25). 
+●​ Dev 2: Lógica de Message Catch y activación (HU-27). 
+●​ Dev 3: Correlación de mensajes vía BusinessKey (HU-28). 
+●​ Dev 4: Sistema de notificaciones externas (Webhooks/Email) (HU-26). 
+●​ Dev 5: Lógica de procesos compartidos entre pools (HU-23). 
+●​ Dev 6: Gestión de permisos específicos del Pool (HU-24). 
+●​ Dev 7: Refactorización final para SonarQube (Clean Code). 
+ 
+🎨 FASE 2: FRONTEND INTEGRADO (Semanas 5 - 9) 
+Meta: Entrega 2 (07 de mayo). Editor visual funcional conectado a la API. 
+Semana 5: Sprint 3 (Inicio) - Shell y Autenticación 
+●​ Dev 1: Pantalla de Login y sesión de usuario. 
+●​ Dev 2: Pantalla de registro de empresa y NIT. 
+●​ Dev 3: Layout principal y navegación lateral. 
+●​ Dev 4: Interceptores HTTP para manejo de tokens y errores. 
+●​ Dev 5: Servicio de comunicación con la API de Usuarios. 
+●​ Dev 6: Modelos e Interfaces TypeScript basados en el Backend. 
+●​ Dev 7: Sistema de notificaciones visuales (Toasts). 
+Semana 6: Sprint 3 (Cierre) - Gestión de Procesos 
+●​ Dev 1: Vista de lista de procesos (Cards/Table). 
+●​ Dev 2: Implementación de filtros y búsqueda en UI (HU-07). 
+●​ Dev 3: Formulario de creación/edición de metadatos (HU-04). 
+●​ Dev 4: Vista detallada de historial de cambios (HU-05). 
+●​ Dev 5: UI para gestión de Roles de la empresa (HU-17). 
+●​ Dev 6: Lógica de eliminación y cambio de estado visual (HU-06). 
+●​ Dev 7: Pruebas de integración Frontend-Backend (CRUDs). 
+Semana 7: Sprint 4 (Inicio) - El Canvas Visual (Estructura) 
+●​ Dev 1: Implementación del Lienzo (Canvas) base. 
+●​ Dev 2: Renderizado visual de Pools (HU-21). 
+●​ Dev 3: Implementación visual de Lanes (Swimlanes) (HU-22). 
+●​ Dev 4: Lógica de Drag-and-Drop de elementos. 
+●​ Dev 5: Controles de Zoom y Panorámica del editor. 
+●​ Dev 6: Panel lateral de propiedades del elemento seleccionado. 
+●​ Dev 7: Lógica de guardado automático (Auto-save). 
+Semana 8: Sprint 4 (Cierre) - Modelado de Nodos y Flujo 
+●​ Dev 1: Renderizado de Actividades y Gateways. 
+●​ Dev 2: Herramienta de conexión (Dibujar Arcos entre nodos). 
+●​ Dev 3: Validación visual de conexiones permitidas. 
+●​ Dev 4: UI para configuración de Mensajes (Throw/Catch). 
+●​ Dev 5: Implementación de iconos por tipo de Gateway. 
+●​ Dev 6: Exportación del diagrama a formato imagen/JSON. 
+●​ Dev 7: Sincronización de cambios masivos con el Backend. 
+Semana 9: Sprint 5 (Inicio) - Integración y Entrega Frontend (07 May) 
+●​ Dev 1: Visualización de trazabilidad en el diagrama. 
+●​ Dev 2: UI para compartir procesos entre pools (HU-23). 
+●​ Dev 3: Configuración de permisos de pool en UI (HU-24). 
+●​ Dev 4: Guía de usuario interactiva (Onboarding). 
+●​ Dev 5: Optimización de rendimiento del canvas. 
+●​ Dev 6: Pruebas E2E (End-to-End) del flujo completo. 
+●​ Dev 7: Pulido estético (CSS/Temas). 
+ 
+🛡️ FASE 3: SEGURIDAD Y CIERRE FINAL (Semanas 10 - 11) 
+Meta: Entrega Final (19 de mayo). Seguridad robusta y Métricas. 
+Semana 10: Sprint 5 (Cierre) - Blindaje de Seguridad 
+●​ Dev 1: Implementación final de JWT (Refresh Tokens). 
+●​ Dev 2: Control de Acceso Basado en Roles (RBAC) estricto. 
+●​ Dev 3: Auditoría de aislamiento multiempresa (Pruebas de penetración). 
+●​ Dev 4: Encriptación de datos sensibles en tránsito. 
+●​ Dev 5: Configuración de CORS y Headers de seguridad. 
+●​ Dev 6: Implementación de logs de acceso y seguridad. 
+●​ Dev 7: Recuperación de contraseñas y flujo de seguridad de cuenta. 
+Semana 11: Sprint 6 (Final) - Métricas y Despliegue 
+●​ Dev 1: Dashboard de métricas (Uso por empresa). 
+●​ Dev 2: Estadísticas de estados de procesos (HU-Métricas). 
+●​ Dev 3: Reporte de trazabilidad descargable. 
+●​ Dev 4: Despliegue final en servidor (Cloud o Local). 
+●​ Dev 5: Documentación técnica de arquitectura. 
+●​ Dev 6: Limpieza final de deuda técnica (SonarQube 0 errores). 
+●​ Dev 7: Preparación de la Demo Final. 
+ 
+ 
