@@ -12,4 +12,12 @@ public interface UsuarioService {
      * @return información del usuario creado, incluyendo id y rol asignado
      */
     UsuarioDTO crearUsuario(UsuarioCreateDTO usuarioCreate);
+
+    /**
+     * Crea un usuario administrador inicial para una empresa recién creada.
+     *
+     * @param empresa       La empresa a la que pertenece el administrador
+     * @param emailContacto El correo que se usará como inicio de sesión
+     */
+    void crearAdminInicial(com.grupo1.editorprocesos.model.entity.core.Empresa empresa, String emailContacto);
 }

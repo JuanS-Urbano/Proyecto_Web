@@ -53,4 +53,20 @@ public class UsuarioServiceImpl implements UsuarioService {
         salida.setEmpresaId(empresa.getId());
         return salida;
     }
+
+    @Override
+    @Transactional
+    public void crearAdminInicial(Empresa empresa, String emailContacto) {
+        // En una implementación real, se generaría una contraseña aleatoria o temporal,
+        // o se enviaría un correo de activación.
+
+        Usuario admin = new Usuario();
+        admin.setEmail(emailContacto);
+        admin.setPassword("admin123"); // Todo: Encriptar luego
+        admin.setEmpresa(empresa);
+        admin.setRolSistema(RolSistema.ADMIN_EMPRESA);
+        admin.setIsActivo(true);
+
+        usuarioRepository.save(admin);
+    }
 }

@@ -5,6 +5,7 @@ import com.grupo1.editorprocesos.exception.DuplicateResourceException;
 import com.grupo1.editorprocesos.model.entity.core.Empresa;
 import com.grupo1.editorprocesos.repository.EmpresaRepository;
 import com.grupo1.editorprocesos.service.EmpresaService;
+import com.grupo1.editorprocesos.service.UsuarioService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ public class EmpresaServiceImpl implements EmpresaService {
 
     private final EmpresaRepository empresaRepository;
     private final ModelMapper modelMapper;
+    private final UsuarioService usuarioService;
 
     @Override
     @Transactional
@@ -35,10 +37,8 @@ public class EmpresaServiceImpl implements EmpresaService {
         empresa = empresaRepository.save(empresa);
 
         // =====================================================================================
-        // TODO (Dev 2 - HU-02): Generar el usuario administrador al crear la empresa.
-        // Aquí debes inyectar y llamar al UsuarioService (Ej:
-        // usuarioService.crearAdmin(empresa))
-        // Validar que se reciba la contraseña temporal o se envíe un correo.
+        // Integración HU-02: Generar el usuario administrador al crear la empresa.
+        usuarioService.crearAdminInicial(empresa, empresaDTO.getCorreoContacto());
         // =====================================================================================
 
         // 4. Retornar DTO guardado con su ID generado
