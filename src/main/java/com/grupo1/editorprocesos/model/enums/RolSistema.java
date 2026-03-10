@@ -4,5 +4,5 @@ public enum RolSistema {
     ADMIN_PLATAFORMA,
     ADMIN_EMPRESA,
     EDITOR,
-    LECTOR
+    SOLO_LECTURA
 }

@@ -1,12 +1,14 @@
 package com.grupo1.editorprocesos.repository;
 
-import com.grupo1.editorprocesos.model.entity.core.Usuario;
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
+import com.grupo1.editorprocesos.model.entity.core.Usuario;
 
-@Repository
 public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
-    Optional<Usuario> findByEmail(String email);
+
+    List<Usuario> findByEmpresa_Id(Long empresaId);
+
+    boolean existsByCorreo(String correo);
 }

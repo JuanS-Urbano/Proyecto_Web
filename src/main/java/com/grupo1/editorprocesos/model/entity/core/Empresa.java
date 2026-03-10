@@ -1,26 +1,59 @@
 package com.grupo1.editorprocesos.model.entity.core;
 
-import com.grupo1.editorprocesos.model.entity.audit.AuditableEntity;
-import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import java.util.ArrayList;
+import java.util.List;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "empresas")
-@Getter
-@Setter
-public class Empresa extends AuditableEntity {
+@Table(name = "empresa")
+public class Empresa {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 50)
-    private String nit;
-
-    @Column(nullable = false, length = 150)
+    @Column(nullable = false)
     private String nombre;
 
-    @Column(name = "correo_contacto", nullable = false, length = 100)
-    private String correoContacto;
+    @OneToMany(mappedBy = "empresa", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Usuario> usuarios = new ArrayList<>();
+
+    public Empresa() {
+    }
+
+    public Empresa(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public List<Usuario> getUsuarios() {
+        return usuarios;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public void setUsuarios(List<Usuario> usuarios) {
+        this.usuarios = usuarios;
+    }
 }

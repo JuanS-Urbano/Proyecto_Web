@@ -1,12 +1,8 @@
 package com.grupo1.editorprocesos.repository;
 
-import com.grupo1.editorprocesos.model.entity.core.Empresa;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
+import com.grupo1.editorprocesos.model.entity.core.Empresa;
 
-@Repository
 public interface EmpresaRepository extends JpaRepository<Empresa, Long> {
-    Optional<Empresa> findByNit(String nit);
 }
