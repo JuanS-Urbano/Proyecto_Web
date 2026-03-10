@@ -2,6 +2,7 @@ package com.grupo1.editorprocesos.service.impl;
 
 import com.grupo1.editorprocesos.dto.EmpresaDTO;
 import com.grupo1.editorprocesos.exception.DuplicateResourceException;
+import com.grupo1.editorprocesos.exception.ResourceNotFoundException;
 import com.grupo1.editorprocesos.model.entity.core.Empresa;
 import com.grupo1.editorprocesos.repository.EmpresaRepository;
 import com.grupo1.editorprocesos.service.EmpresaService;
@@ -58,7 +59,7 @@ public class EmpresaServiceImpl implements EmpresaService {
     @Transactional(readOnly = true)
     public EmpresaDTO obtenerEmpresaPorId(Long id) {
         Empresa empresa = empresaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Empresa no encontrada con id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada con id: " + id));
         return modelMapper.map(empresa, EmpresaDTO.class);
     }
 }

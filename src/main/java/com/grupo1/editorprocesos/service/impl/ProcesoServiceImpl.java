@@ -16,6 +16,7 @@ import com.grupo1.editorprocesos.repository.PoolRepository;
 import com.grupo1.editorprocesos.repository.ProcesoRepository;
 import com.grupo1.editorprocesos.repository.UsuarioRepository;
 import com.grupo1.editorprocesos.service.ProcesoService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -35,6 +36,7 @@ public class ProcesoServiceImpl implements ProcesoService {
     private final UsuarioRepository usuarioRepository;
     private final HistorialCambiosRepository historialCambiosRepository;
     private final ModelMapper modelMapper;
+    private final HttpServletRequest httpServletRequest;
 
     @Override
     @Transactional
@@ -180,7 +182,6 @@ public class ProcesoServiceImpl implements ProcesoService {
         Usuario usuarioActual = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, pool.getEmpresa());
 
-        // Consulta eficiente: filtra por pool y nombre directamente en la BD
         return procesoRepository.findByPoolIdAndNombreContainingIgnoreCase(poolId, nombre).stream()
                 .map(this::convertirADTO)
                 .collect(Collectors.toList());
@@ -232,7 +233,6 @@ public class ProcesoServiceImpl implements ProcesoService {
 
         Proceso procesoActualizado = procesoRepository.save(proceso);
 
-        // Registrar historial solo si hubo cambios
         if (huboCambios) {
             HistorialCambios historial = new HistorialCambios();
             historial.setProceso(procesoActualizado);
@@ -294,13 +294,18 @@ public class ProcesoServiceImpl implements ProcesoService {
         return dto;
     }
 
+    /**
+     * Obtiene el usuario actual desde el header X-User-Email del request HTTP.
+     * En la Fase 3 (JWT), se reemplazará por SecurityContextHolder.getContext().getAuthentication().
+     */
     private Usuario obtenerUsuarioActual() {
-        // Implementación temporal: retorna el primer usuario activo
-        // En fase 3, se obtendrá del JWT/SecurityContext
-        return usuarioRepository.findAll().stream()
-                .findFirst()
+        String email = httpServletRequest.getHeader("X-User-Email");
+        if (email == null || email.isBlank()) {
+            throw new UnauthorizedException("No se proporcionó el header X-User-Email para identificar al usuario");
+        }
+        return usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new UnauthorizedException(
-                        "No hay usuario autenticado en la sesión"));
+                        "Usuario no encontrado con el email: " + email));
     }
 
     private void validarUsuarioPertenecAEmpresa(Usuario usuario, Empresa empresa) {
