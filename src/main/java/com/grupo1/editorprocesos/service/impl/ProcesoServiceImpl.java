@@ -192,6 +192,11 @@ public class ProcesoServiceImpl implements ProcesoService {
     public void eliminarProceso(Long id) {
         Proceso proceso = procesoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
+                        "Proceso no encontrado con id: " + id));
+
+        proceso.setEstado(EstadoProceso.INACTIVO);
+        procesoRepository.save(proceso);
+    }
                         "Proceso no encontrado con ID: " + id));
 
         // Validar que el usuario pertenezca a la empresa

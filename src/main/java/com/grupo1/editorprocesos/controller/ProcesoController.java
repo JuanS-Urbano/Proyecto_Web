@@ -17,6 +17,10 @@ public class ProcesoController {
 
     private final ProcesoService procesoService;
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> eliminarProceso(@PathVariable Long id) {
+        procesoService.eliminarProceso(id);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Proceso marcado como INACTIVO", null));
     /**
      * Crea un nuevo proceso asociado a la empresa/pool del usuario actual.
      * 
