@@ -39,8 +39,12 @@ public class RolProcesoServiceImpl implements RolProcesoService {
     @Transactional
     public RolProcesoDTO editarRol(Long id, RolProcesoDTO rolDTO) {
         RolProceso rol = findById(id);
-        rol.setNombre(rolDTO.getNombre());
-        rol.setDescripcion(rolDTO.getDescripcion());
+        if (rolDTO.getNombre() != null) {
+            rol.setNombre(rolDTO.getNombre());
+        }
+        if (rolDTO.getDescripcion() != null) {
+            rol.setDescripcion(rolDTO.getDescripcion());
+        }
         return toDTO(rolProcesoRepository.save(rol));
     }
 
