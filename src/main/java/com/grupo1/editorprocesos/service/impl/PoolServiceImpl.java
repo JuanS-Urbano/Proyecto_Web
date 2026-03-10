@@ -8,8 +8,12 @@ import com.grupo1.editorprocesos.repository.EmpresaRepository;
 import com.grupo1.editorprocesos.repository.PoolRepository;
 import com.grupo1.editorprocesos.service.PoolService;
 import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -17,6 +21,7 @@ public class PoolServiceImpl implements PoolService {
 
     private final PoolRepository poolRepository;
     private final EmpresaRepository empresaRepository;
+    private final ModelMapper modelMapper;
 
     @Override
     @Transactional
@@ -25,16 +30,54 @@ public class PoolServiceImpl implements PoolService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Empresa no encontrada con id: " + poolDTO.getEmpresaId()));
 
+        // =====================================================================================
+        // TODO (Dev 3): Validar que el usuario actual tenga rol ADMIN_EMPRESA
+        // Usuario usuario = obtenerUsuarioActual();
+        // if (usuario.getRolSistema() != RolSistema.ADMIN_EMPRESA) throw ...
+        // =====================================================================================
+
         Pool pool = new Pool();
         pool.setNombre(poolDTO.getNombre());
         pool.setEmpresa(empresa);
 
         Pool guardado = poolRepository.save(pool);
 
-        PoolDTO resultado = new PoolDTO();
-        resultado.setId(guardado.getId());
-        resultado.setNombre(guardado.getNombre());
+        PoolDTO resultado = modelMapper.map(guardado, PoolDTO.class);
         resultado.setEmpresaId(guardado.getEmpresa().getId());
+        return resultado;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PoolDTO> listarPoolsPorEmpresa(Long empresaId) {
+        empresaRepository.findById(empresaId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Empresa no encontrada con id: " + empresaId));
+
+        return poolRepository.findByEmpresaId(empresaId).stream()
+                .map(pool -> {
+                    PoolDTO dto = modelMapper.map(pool, PoolDTO.class);
+                    dto.setEmpresaId(empresaId);
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public PoolDTO editarPool(Long id, PoolDTO poolDTO) {
+        Pool pool = poolRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Pool no encontrado con id: " + id));
+
+        if (poolDTO.getNombre() != null) {
+            pool.setNombre(poolDTO.getNombre());
+        }
+
+        Pool actualizado = poolRepository.save(pool);
+
+        PoolDTO resultado = modelMapper.map(actualizado, PoolDTO.class);
+        resultado.setEmpresaId(actualizado.getEmpresa().getId());
         return resultado;
     }
 }
