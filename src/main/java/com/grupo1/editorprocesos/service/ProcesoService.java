@@ -1,19 +1,13 @@
 package com.grupo1.editorprocesos.service;
 
+import com.grupo1.editorprocesos.dto.HistorialCambiosDTO;
 import com.grupo1.editorprocesos.dto.ProcesoDTO;
+import com.grupo1.editorprocesos.model.enums.EstadoProceso;
+
 import java.util.List;
 
 public interface ProcesoService {
-    
-    /**
-     * Crea un nuevo proceso asociado a la empresa y pool del usuario actual.
-     * Valida que el usuario pertenezca a la empresa del pool especificado.
-     * 
-     * @param procesoDTO DTO con los datos del proceso a crear
-     * @return DTO del proceso creado con su ID asignado
-     * @throws com.grupo1.editorprocesos.exception.ResourceNotFoundException si la empresa o pool no existen
-     * @throws com.grupo1.editorprocesos.exception.UnauthorizedException si el usuario no pertenece a la empresa
-     */
+
     ProcesoDTO crearProceso(ProcesoDTO procesoDTO);
 
     ProcesoDTO obtenerProcesoById(Long id);
@@ -22,7 +16,17 @@ public interface ProcesoService {
 
     List<ProcesoDTO> listarProcesosPorPool(Long poolId);
 
+    List<ProcesoDTO> listarProcesosPorPoolYEstado(Long poolId, EstadoProceso estado);
+
+    List<ProcesoDTO> listarProcesosPorPoolYCategoria(Long poolId, String categoria);
+
+    List<ProcesoDTO> listarProcesosPorPoolConFiltros(Long poolId, EstadoProceso estado, String categoria);
+
+    List<ProcesoDTO> buscarProcesosPorNombre(Long poolId, String nombre);
+
     ProcesoDTO editarProceso(Long id, ProcesoDTO procesoDTO);
 
     void eliminarProceso(Long id);
+
+    List<HistorialCambiosDTO> obtenerHistorialProceso(Long procesoId);
 }
