@@ -43,40 +43,30 @@ public class ProcesoServiceImpl implements ProcesoService {
             throw new IllegalArgumentException("El poolId es requerido para crear un proceso");
         }
 
-        // Obtener el pool especificado
         Pool pool = poolRepository.findById(procesoDTO.getPoolId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Pool no encontrado con ID: " + procesoDTO.getPoolId()));
 
-        // Obtener la empresa del pool
         Empresa empresa = pool.getEmpresa();
         if (empresa == null) {
             throw new ResourceNotFoundException(
                     "Empresa no encontrada para el pool con ID: " + procesoDTO.getPoolId());
         }
 
-        // Obtener el usuario actual desde el contexto o sesión
-        // Por ahora, usamos el usuarioId del DTO si está disponible,
-        // En fase 3 (Seguridad) esto vendrá del JWT
         Usuario usuarioActual = obtenerUsuarioActual();
-
-        // Validar que el usuario pertenezca a la empresa
         validarUsuarioPertenecAEmpresa(usuarioActual, empresa);
 
-        // Crear la nueva entidad Proceso
         Proceso proceso = new Proceso();
         proceso.setNombre(procesoDTO.getNombre());
         proceso.setDescripcion(procesoDTO.getDescripcion());
         proceso.setCategoria(procesoDTO.getCategoria());
-        proceso.setEstado(EstadoProceso.BORRADOR); // Por defecto, todo proceso se crea en BORRADOR
+        proceso.setEstado(EstadoProceso.BORRADOR);
         Boolean compartido = procesoDTO.getConfiguracionCompartido();
         proceso.setConfiguracionCompartido(compartido != null ? compartido : false);
         proceso.setPool(pool);
 
-        // Persistir el proceso
         Proceso procesoGuardado = procesoRepository.save(proceso);
 
-        // Convertir a DTO y retornar
         ProcesoDTO resultadoDTO = modelMapper.map(procesoGuardado, ProcesoDTO.class);
         resultadoDTO.setEmpresaId(empresa.getId());
         resultadoDTO.setPoolId(pool.getId());
@@ -90,15 +80,7 @@ public class ProcesoServiceImpl implements ProcesoService {
         Proceso proceso = procesoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Proceso no encontrado con ID: " + id));
-
-        ProcesoDTO dto = modelMapper.map(proceso, ProcesoDTO.class);
-        if (proceso.getPool() != null) {
-            dto.setPoolId(proceso.getPool().getId());
-            if (proceso.getPool().getEmpresa() != null) {
-                dto.setEmpresaId(proceso.getPool().getEmpresa().getId());
-            }
-        }
-        return dto;
+        return convertirADTO(proceso);
     }
 
     @Override
@@ -108,18 +90,11 @@ public class ProcesoServiceImpl implements ProcesoService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Empresa no encontrada con ID: " + empresaId));
 
-        // Obtener usuario actual y validar que pertenezca a la empresa
         Usuario usuarioActual = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, empresa);
 
-        // Consulta eficiente por empresa via JPA
         return procesoRepository.findByPoolEmpresaId(empresaId).stream()
-                .map(proceso -> {
-                    ProcesoDTO dto = modelMapper.map(proceso, ProcesoDTO.class);
-                    dto.setPoolId(proceso.getPool().getId());
-                    dto.setEmpresaId(empresaId);
-                    return dto;
-                })
+                .map(this::convertirADTO)
                 .collect(Collectors.toList());
     }
 
@@ -139,6 +114,7 @@ public class ProcesoServiceImpl implements ProcesoService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ProcesoDTO> listarProcesosPorPoolYEstado(Long poolId, EstadoProceso estado) {
         Pool pool = poolRepository.findById(poolId)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -153,6 +129,7 @@ public class ProcesoServiceImpl implements ProcesoService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ProcesoDTO> listarProcesosPorPoolYCategoria(Long poolId, String categoria) {
         Pool pool = poolRepository.findById(poolId)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -167,6 +144,7 @@ public class ProcesoServiceImpl implements ProcesoService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ProcesoDTO> listarProcesosPorPoolConFiltros(Long poolId, EstadoProceso estado, String categoria) {
         Pool pool = poolRepository.findById(poolId)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -176,7 +154,7 @@ public class ProcesoServiceImpl implements ProcesoService {
         validarUsuarioPertenecAEmpresa(usuarioActual, pool.getEmpresa());
 
         List<Proceso> procesos;
-        
+
         if (estado != null && categoria != null) {
             procesos = procesoRepository.findByPoolIdAndEstadoAndCategoria(poolId, estado, categoria);
         } else if (estado != null) {
@@ -193,6 +171,7 @@ public class ProcesoServiceImpl implements ProcesoService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ProcesoDTO> buscarProcesosPorNombre(Long poolId, String nombre) {
         Pool pool = poolRepository.findById(poolId)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -201,21 +180,9 @@ public class ProcesoServiceImpl implements ProcesoService {
         Usuario usuarioActual = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, pool.getEmpresa());
 
-        return procesoRepository.findByNombreContains(nombre).stream()
-                .filter(p -> p.getPool().getId().equals(poolId))
+        // Consulta eficiente: filtra por pool y nombre directamente en la BD
+        return procesoRepository.findByPoolIdAndNombreContainingIgnoreCase(poolId, nombre).stream()
                 .map(this::convertirADTO)
-        // Validar que el usuario pertenezca a la empresa del pool
-        Usuario usuarioActual = obtenerUsuarioActual();
-        validarUsuarioPertenecAEmpresa(usuarioActual, pool.getEmpresa());
-
-        // Consulta eficiente por pool via JPA
-        return procesoRepository.findByPoolId(poolId).stream()
-                .map(proceso -> {
-                    ProcesoDTO dto = modelMapper.map(proceso, ProcesoDTO.class);
-                    dto.setPoolId(pool.getId());
-                    dto.setEmpresaId(pool.getEmpresa().getId());
-                    return dto;
-                })
                 .collect(Collectors.toList());
     }
 
@@ -230,44 +197,45 @@ public class ProcesoServiceImpl implements ProcesoService {
         validarUsuarioPertenecAEmpresa(usuarioActual, proceso.getPool().getEmpresa());
 
         StringBuilder cambios = new StringBuilder("Cambios realizados: ");
-        boolean hubosCambios = false;
+        boolean huboCambios = false;
 
         if (procesoDTO.getNombre() != null && !procesoDTO.getNombre().equals(proceso.getNombre())) {
             cambios.append("Nombre: \"").append(proceso.getNombre()).append("\" → \"").append(procesoDTO.getNombre()).append("\". ");
             proceso.setNombre(procesoDTO.getNombre());
-            hubosCambios = true;
+            huboCambios = true;
         }
-        
+
         if (procesoDTO.getDescripcion() != null && !procesoDTO.getDescripcion().equals(proceso.getDescripcion())) {
             cambios.append("Descripción actualizada. ");
             proceso.setDescripcion(procesoDTO.getDescripcion());
-            hubosCambios = true;
+            huboCambios = true;
         }
-        
+
         if (procesoDTO.getCategoria() != null && !procesoDTO.getCategoria().equals(proceso.getCategoria())) {
             cambios.append("Categoría: \"").append(proceso.getCategoria()).append("\" → \"").append(procesoDTO.getCategoria()).append("\". ");
             proceso.setCategoria(procesoDTO.getCategoria());
-            hubosCambios = true;
+            huboCambios = true;
         }
-        
+
         if (procesoDTO.getEstado() != null && !procesoDTO.getEstado().equals(proceso.getEstado())) {
             cambios.append("Estado: ").append(proceso.getEstado()).append(" → ").append(procesoDTO.getEstado()).append(". ");
             proceso.setEstado(procesoDTO.getEstado());
-            hubosCambios = true;
+            huboCambios = true;
         }
-        
-        if (procesoDTO.getConfiguracionCompartido() != null && 
+
+        if (procesoDTO.getConfiguracionCompartido() != null &&
             !procesoDTO.getConfiguracionCompartido().equals(proceso.getConfiguracionCompartido())) {
             cambios.append("Configuración compartido: ").append(proceso.getConfiguracionCompartido()).append(" → ").append(procesoDTO.getConfiguracionCompartido()).append(". ");
             proceso.setConfiguracionCompartido(procesoDTO.getConfiguracionCompartido());
-            hubosCambios = true;
+            huboCambios = true;
         }
 
         Proceso procesoActualizado = procesoRepository.save(proceso);
 
-        if (hubosCambios) {
+        // Registrar historial solo si hubo cambios
+        if (huboCambios) {
             HistorialCambios historial = new HistorialCambios();
-            historial.setProceso(proceso);
+            historial.setProceso(procesoActualizado);
             historial.setUsuarioId(usuarioActual.getId());
             historial.setFecha(LocalDateTime.now());
             historial.setCambio(cambios.toString());
@@ -275,17 +243,6 @@ public class ProcesoServiceImpl implements ProcesoService {
         }
 
         return convertirADTO(procesoActualizado);
-        // =====================================================================================
-        // TODO (Dev 5 - HU-05): Registrar cambios en HistorialCambios
-        // historialCambiosService.registrar(procesoActualizado, usuarioActual,
-        // "EDICION");
-        // =====================================================================================
-
-        ProcesoDTO resultadoDTO = modelMapper.map(procesoActualizado, ProcesoDTO.class);
-        resultadoDTO.setPoolId(proceso.getPool().getId());
-        resultadoDTO.setEmpresaId(proceso.getPool().getEmpresa().getId());
-
-        return resultadoDTO;
     }
 
     @Override
@@ -310,6 +267,7 @@ public class ProcesoServiceImpl implements ProcesoService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<HistorialCambiosDTO> obtenerHistorialProceso(Long procesoId) {
         Proceso proceso = procesoRepository.findById(procesoId)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -323,6 +281,8 @@ public class ProcesoServiceImpl implements ProcesoService {
                 .collect(Collectors.toList());
     }
 
+    // ===== Métodos privados de utilidad =====
+
     private ProcesoDTO convertirADTO(Proceso proceso) {
         ProcesoDTO dto = modelMapper.map(proceso, ProcesoDTO.class);
         if (proceso.getPool() != null) {
@@ -335,6 +295,8 @@ public class ProcesoServiceImpl implements ProcesoService {
     }
 
     private Usuario obtenerUsuarioActual() {
+        // Implementación temporal: retorna el primer usuario activo
+        // En fase 3, se obtendrá del JWT/SecurityContext
         return usuarioRepository.findAll().stream()
                 .findFirst()
                 .orElseThrow(() -> new UnauthorizedException(
@@ -342,7 +304,7 @@ public class ProcesoServiceImpl implements ProcesoService {
     }
 
     private void validarUsuarioPertenecAEmpresa(Usuario usuario, Empresa empresa) {
-        if (usuario.getEmpresa() == null 
+        if (usuario.getEmpresa() == null
                 || !usuario.getEmpresa().getId().equals(empresa.getId())) {
             throw new UnauthorizedException(
                     "El usuario no tiene acceso a la empresa con ID: " + empresa.getId());
