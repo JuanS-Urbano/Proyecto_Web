@@ -47,6 +47,15 @@ jobs:
     steps:
     - name: Checkout repo
       uses: actions/checkout@v3
+    - name: Create ghcr-secret (if not exists)
+      run: |
+        sudo microk8s kubectl create secret docker-registry ghcr-secret \
+          --docker-server=ghcr.io \
+          --docker-username=${{ github.actor }} \
+          --docker-password=${{ secrets.GH_PAT }} \
+          --docker-email=deploy@editorprocesos.com \
+          --namespace=grupo23 \
+          --dry-run=client -o yaml | sudo microk8s kubectl apply -f -
     - name: Apply Kubernetes deployment
       run: sudo microk8s kubectl apply -f k8s/deployment.yaml
     - name: Restart Kubernetes deployment
