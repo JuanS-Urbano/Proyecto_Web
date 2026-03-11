@@ -7,4 +7,6 @@ public class AuthResponseDTO {
     private String token;
     private Long usuarioId;
     private String email;
+    private String rolSistema;
+    private Long empresaId;
 }
