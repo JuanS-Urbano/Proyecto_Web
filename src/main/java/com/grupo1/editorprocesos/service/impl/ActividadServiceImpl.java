@@ -3,12 +3,20 @@ package com.grupo1.editorprocesos.service.impl;
 import com.grupo1.editorprocesos.dto.ActividadDTO;
 import com.grupo1.editorprocesos.exception.ResourceNotFoundException;
 import com.grupo1.editorprocesos.exception.UnauthorizedException;
+import com.grupo1.editorprocesos.model.entity.bpmn.Actividad;
 import com.grupo1.editorprocesos.model.entity.bpmn.Arco;
+import com.grupo1.editorprocesos.model.entity.core.Empresa;
+import com.grupo1.editorprocesos.model.entity.core.Usuario;
 import com.grupo1.editorprocesos.model.enums.TipoActividad;
 import com.grupo1.editorprocesos.model.entity.process.HistorialCambios;
 import com.grupo1.editorprocesos.model.entity.process.Lane;
 import com.grupo1.editorprocesos.model.entity.process.Proceso;
+import com.grupo1.editorprocesos.repository.ActividadRepository;
 import com.grupo1.editorprocesos.repository.ArcoRepository;
+import com.grupo1.editorprocesos.repository.HistorialCambiosRepository;
+import com.grupo1.editorprocesos.repository.LaneRepository;
+import com.grupo1.editorprocesos.repository.ProcesoRepository;
+import com.grupo1.editorprocesos.repository.UsuarioRepository;
 import com.grupo1.editorprocesos.service.ActividadService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -196,6 +204,81 @@ public class ActividadServiceImpl implements ActividadService {
                 .collect(Collectors.toList());
     }
 
+    // =====================================================================================
+    // HU (DEV5): Eliminar Actividad — con saneamiento del grafo
+    // =====================================================================================
+
+    @Override
+    @Transactional
+    public void eliminarActividad(Long id) {
+        // 1. Validar existencia de la actividad
+        Actividad actividad = actividadRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Actividad no encontrada con ID: " + id));
+
+        // 2. Validar usuario y empresa
+        Proceso proceso = actividad.getProceso();
+        Usuario usuarioActual = obtenerUsuarioActual();
+        validarUsuarioPertenecAEmpresa(usuarioActual, proceso.getPool().getEmpresa());
+
+        String nombreActividad = actividad.getNombre();
+        Long procesoId = proceso.getId();
+
+        // 3. Buscar arcos conectados dentro del mismo proceso
+        List<Arco> arcosEntrantes = arcoRepository.findByDestinoIdAndProcesoId(nombreActividad, procesoId);
+        List<Arco> arcosSalientes = arcoRepository.findByOrigenIdAndProcesoId(nombreActividad, procesoId);
+
+        StringBuilder detalleHistorial = new StringBuilder(
+                "Actividad eliminada: \"" + nombreActividad
+                        + "\" (Tipo: " + actividad.getTipoActividad() + "). ");
+
+        // 4. Aplicar regla de saneamiento del grafo
+        // Regla: si exactamente 1 entrante y 1 saliente → reconectar
+        // Si hay múltiples o ninguno → eliminar todos sin reconectar (dejar huérfanos)
+        if (arcosEntrantes.size() == 1 && arcosSalientes.size() == 1) {
+            String origenPredecesor = arcosEntrantes.get(0).getOrigenId();
+            String destinoSucesor = arcosSalientes.get(0).getDestinoId();
+
+            // Eliminar los dos arcos conectados a la actividad
+            arcoRepository.delete(arcosEntrantes.get(0));
+            arcoRepository.delete(arcosSalientes.get(0));
+
+            // Verificar que no exista ya ese arco para evitar duplicado
+            boolean yaExiste = arcoRepository
+                    .findByOrigenIdAndDestinoIdAndProcesoId(origenPredecesor, destinoSucesor, procesoId)
+                    .isPresent();
+
+            if (!yaExiste) {
+                Arco nuevoArco = new Arco();
+                nuevoArco.setOrigenId(origenPredecesor);
+                nuevoArco.setDestinoId(destinoSucesor);
+                nuevoArco.setProceso(proceso);
+                arcoRepository.save(nuevoArco);
+                detalleHistorial.append("Arcos saneados: 2 eliminados, reconexión creada \"")
+                        .append(origenPredecesor).append("\" → \"").append(destinoSucesor).append("\".");
+            } else {
+                detalleHistorial.append("Arcos saneados: 2 eliminados. Reconexión omitida (arco ya existe).");
+            }
+        } else {
+            // Múltiples entrantes/salientes: eliminar todos sin reconectar
+            int totalArcos = arcosEntrantes.size() + arcosSalientes.size();
+            arcoRepository.deleteAll(arcosEntrantes);
+            arcoRepository.deleteAll(arcosSalientes);
+            if (totalArcos > 0) {
+                detalleHistorial.append("Arcos huérfanos: ").append(totalArcos)
+                        .append(" arcos conectados eliminados sin reconexión.");
+            } else {
+                detalleHistorial.append("Sin arcos conectados.");
+            }
+        }
+
+        // 5. Eliminar la actividad
+        actividadRepository.delete(actividad);
+
+        // 6. Registrar en historial
+        registrarHistorial(proceso, usuarioActual, detalleHistorial.toString());
+    }
+
     // ===== Métodos privados de utilidad =====
 
     private ActividadDTO convertirADTO(Actividad actividad) {
@@ -241,20 +324,11 @@ public class ActividadServiceImpl implements ActividadService {
 
     /**
      * Valida que al cambiar el tipo de actividad, los arcos conectados sigan siendo válidos.
-     * Por ahora, registra una advertencia en el historial si hay arcos conectados.
-     * En futuras versiones, implementar reglas BPMN específicas.
+     * Por ahora registra advertencia; en futuras versiones se puede lanzar excepción.
      */
     private void validarArcosConectadosAlCambiarTipo(Actividad actividad, TipoActividad nuevoTipo) {
         List<Arco> arcosEntrantes = arcoRepository.findByDestinoId(actividad.getNombre());
         List<Arco> arcosSalientes = arcoRepository.findByOrigenId(actividad.getNombre());
-
-        if (!arcosEntrantes.isEmpty() || !arcosSalientes.isEmpty()) {
-            // Por ahora, solo registrar en historial que hay arcos conectados
-            // En futuro, validar reglas específicas (ej: RECEPCION no debería tener salientes)
-            String advertencia = "Cambio de tipo con arcos conectados: " +
-                    arcosEntrantes.size() + " entrantes, " + arcosSalientes.size() + " salientes.";
-            // Podríamos lanzar excepción si no es válido, pero por ahora solo registrar
-            // throw new IllegalArgumentException("Cambio de tipo inválido: " + advertencia);
-        }
+        // En el futuro se pueden validar reglas BPMN específicas aquí.
     }
 }
