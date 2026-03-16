@@ -52,4 +52,12 @@ public class ActividadController {
         List<ActividadDTO> actividades = actividadService.listarActividadesPorProceso(procesoId);
         return ResponseEntity.ok(new ApiResponse<>(true, "Actividades del proceso obtenidas exitosamente", actividades));
     }
-}
+    /**
+     * HU-10: Eliminar una actividad.
+     * Elimina la actividad y todos los arcos conectados.
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> eliminarActividad(@PathVariable Long id) {
+        actividadService.eliminarActividad(id);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Actividad eliminada exitosamente", null));
+    }}

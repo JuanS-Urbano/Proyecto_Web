@@ -15,7 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -194,6 +194,47 @@ public class ActividadServiceImpl implements ActividadService {
         return actividadRepository.findByProcesoId(procesoId).stream()
                 .map(this::convertirADTO)
                 .collect(Collectors.toList());
+    }
+
+    // =====================================================================================
+    // HU-10: Eliminar Actividad
+    // =====================================================================================
+
+    @Override
+    @Transactional
+    public void eliminarActividad(Long id) {
+        // 1. Buscar actividad existente
+        Actividad actividad = actividadRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Actividad no encontrada con ID: " + id));
+
+        // 2. Validar pertenencia a empresa
+        Proceso proceso = actividad.getProceso();
+        Usuario usuarioActual = obtenerUsuarioActual();
+        validarUsuarioPertenecAEmpresa(usuarioActual, proceso.getPool().getEmpresa());
+
+        // 3. Manejar arcos conectados (limpieza en cascada)
+        List<Arco> arcosAEliminar = new ArrayList<>();
+        arcosAEliminar.addAll(arcoRepository.findByOrigenId(actividad.getNombre()));
+        arcosAEliminar.addAll(arcoRepository.findByDestinoId(actividad.getNombre()));
+
+        // Eliminar arcos y registrar en historial
+        for (Arco arco : arcosAEliminar) {
+            arcoRepository.delete(arco);
+            registrarHistorial(proceso, usuarioActual,
+                    "Arco eliminado por eliminación de actividad: Origen \"" + arco.getOrigenId()
+                            + "\" → Destino \"" + arco.getDestinoId() + "\"");
+        }
+
+        // 4. Eliminar la actividad
+        actividadRepository.delete(actividad);
+
+        // 5. Registrar eliminación en historial
+        String detalleArcos = arcosAEliminar.isEmpty() ? "Sin arcos conectados." :
+                "Eliminados " + arcosAEliminar.size() + " arcos conectados.";
+        registrarHistorial(proceso, usuarioActual,
+                "Actividad eliminada: \"" + actividad.getNombre()
+                        + "\" (Tipo: " + actividad.getTipoActividad() + "). " + detalleArcos);
     }
 
     // ===== Métodos privados de utilidad =====
