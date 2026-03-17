@@ -11,10 +11,11 @@ import com.grupo1.editorprocesos.model.entity.process.Lane;
 import com.grupo1.editorprocesos.model.entity.process.Proceso;
 import com.grupo1.editorprocesos.repository.ActividadRepository;
 import com.grupo1.editorprocesos.repository.HistorialCambiosRepository;
+import com.grupo1.editorprocesos.service.LaneService;
+import com.grupo1.editorprocesos.repository.LaneRepository;
 import com.grupo1.editorprocesos.repository.ProcesoRepository;
 import com.grupo1.editorprocesos.repository.UsuarioRepository;
 import com.grupo1.editorprocesos.service.ActividadService;
-import com.grupo1.editorprocesos.service.LaneService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -33,6 +34,7 @@ public class ActividadServiceImpl implements ActividadService {
     private final UsuarioRepository usuarioRepository;
     private final HistorialCambiosRepository historialCambiosRepository;
     private final LaneService laneService;
+    private final LaneRepository laneRepository;
     private final HttpServletRequest httpServletRequest;
 
     // =====================================================================================
