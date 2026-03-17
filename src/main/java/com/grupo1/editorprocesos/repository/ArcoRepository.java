@@ -4,6 +4,9 @@ import com.grupo1.editorprocesos.model.entity.bpmn.Arco;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+import java.util.Optional;
+
 @Repository
 public interface ArcoRepository extends JpaRepository<Arco, Long> {
 
@@ -26,4 +29,16 @@ public interface ArcoRepository extends JpaRepository<Arco, Long> {
      * Busca un arco específico entre origen y destino en un proceso.
      */
     Optional<Arco> findByOrigenIdAndDestinoIdAndProcesoId(String origenId, String destinoId, Long procesoId);
+
+    /**
+     * Busca arcos salientes de un elemento dentro de un proceso específico.
+     * Usado para el saneamiento del grafo al eliminar un nodo (Actividad o Gateway).
+     */
+    List<Arco> findByOrigenIdAndProcesoId(String origenId, Long procesoId);
+
+    /**
+     * Busca arcos entrantes a un elemento dentro de un proceso específico.
+     * Usado para el saneamiento del grafo al eliminar un nodo (Actividad o Gateway).
+     */
+    List<Arco> findByDestinoIdAndProcesoId(String destinoId, Long procesoId);
 }

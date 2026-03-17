@@ -2,6 +2,8 @@ package com.grupo1.editorprocesos.service.impl;
 
 import com.grupo1.editorprocesos.dto.ArcoDTO;
 import com.grupo1.editorprocesos.exception.DuplicateResourceException;
+import com.grupo1.editorprocesos.exception.ResourceNotFoundException;
+import com.grupo1.editorprocesos.exception.UnauthorizedException;
 import com.grupo1.editorprocesos.model.entity.bpmn.Actividad;
 import com.grupo1.editorprocesos.model.entity.bpmn.Arco;
 import com.grupo1.editorprocesos.model.entity.bpmn.ElementoBpmn;

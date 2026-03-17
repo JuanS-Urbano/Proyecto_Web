@@ -28,6 +28,9 @@ public interface ActividadService {
     List<ActividadDTO> listarActividadesPorProceso(Long procesoId);
 
     /**
+     * HU (DEV5): Elimina una actividad con saneamiento del grafo del proceso.
+     * - Si la actividad tiene exactamente 1 arco entrante y 1 saliente, los reconecta.
+     * - Si tiene múltiples o ninguno, elimina todos los arcos conectados sin reconectar.
      * Elimina una actividad y maneja los arcos conectados.
      * Elimina todos los arcos donde la actividad es origen o destino.
      */
