@@ -5,10 +5,19 @@ import com.grupo1.editorprocesos.exception.ResourceNotFoundException;
 import com.grupo1.editorprocesos.exception.UnauthorizedException;
 import com.grupo1.editorprocesos.model.entity.bpmn.Arco;
 import com.grupo1.editorprocesos.model.enums.TipoActividad;
+import com.grupo1.editorprocesos.repository.ArcoRepository;
+import com.grupo1.editorprocesos.model.entity.bpmn.Actividad;
+import com.grupo1.editorprocesos.model.entity.core.Empresa;
+import com.grupo1.editorprocesos.model.entity.core.Usuario;
 import com.grupo1.editorprocesos.model.entity.process.HistorialCambios;
 import com.grupo1.editorprocesos.model.entity.process.Lane;
 import com.grupo1.editorprocesos.model.entity.process.Proceso;
-import com.grupo1.editorprocesos.repository.ArcoRepository;
+import com.grupo1.editorprocesos.repository.ActividadRepository;
+import com.grupo1.editorprocesos.repository.HistorialCambiosRepository;
+import com.grupo1.editorprocesos.service.LaneService;
+import com.grupo1.editorprocesos.repository.LaneRepository;
+import com.grupo1.editorprocesos.repository.ProcesoRepository;
+import com.grupo1.editorprocesos.repository.UsuarioRepository;
 import com.grupo1.editorprocesos.service.ActividadService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,8 +37,9 @@ public class ActividadServiceImpl implements ActividadService {
     private final ProcesoRepository procesoRepository;
     private final UsuarioRepository usuarioRepository;
     private final HistorialCambiosRepository historialCambiosRepository;
-    private final LaneRepository laneRepository;
     private final ArcoRepository arcoRepository;
+    private final LaneService laneService;
+    private final LaneRepository laneRepository;
     private final HttpServletRequest httpServletRequest;
 
     // =====================================================================================
@@ -62,17 +73,11 @@ public class ActividadServiceImpl implements ActividadService {
         actividad.setProceso(proceso);
 
         // =====================================================================================
-        // TODO (Dev 2 — HU-22): Cuando LaneService esté implementado, se debe validar que:
-        //   1. El laneId pertenezca al MISMO proceso que la actividad.
-        //   2. El lane exista y esté activo.
-        // Actualmente se asigna el lane si se proporciona el laneId, pero sin validación
-        // cruzada con el proceso. Dev 2 debe agregar esa validación aquí.
+        // HU-22: Validar que el lane exista y pertenezca al mismo proceso que la actividad.
         // =====================================================================================
         if (actividadDTO.getLaneId() != null) {
-            Lane lane = laneRepository.findById(actividadDTO.getLaneId())
-                    .orElseThrow(() -> new ResourceNotFoundException(
-                            "Lane no encontrado con ID: " + actividadDTO.getLaneId()));
-            // TODO (Dev 2): Validar que lane.getProceso().getId().equals(proceso.getId())
+            laneService.validarLanePerteneceAlProceso(actividadDTO.getLaneId(), proceso.getId());
+            Lane lane = laneService.obtenerLaneEntityById(actividadDTO.getLaneId());
             actividad.setLane(lane);
         }
 
