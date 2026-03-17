@@ -8,6 +8,7 @@ import com.grupo1.editorprocesos.model.entity.core.Usuario;
 import com.grupo1.editorprocesos.model.entity.process.Lane;
 import com.grupo1.editorprocesos.model.entity.process.Proceso;
 import com.grupo1.editorprocesos.model.entity.process.RolProceso;
+import com.grupo1.editorprocesos.repository.ActividadRepository;
 import com.grupo1.editorprocesos.repository.LaneRepository;
 import com.grupo1.editorprocesos.repository.ProcesoRepository;
 import com.grupo1.editorprocesos.repository.RolProcesoRepository;
@@ -29,6 +30,7 @@ public class LaneServiceImpl implements LaneService {
     private final ProcesoRepository procesoRepository;
     private final RolProcesoRepository rolProcesoRepository;
     private final UsuarioRepository usuarioRepository;
+    private final ActividadRepository actividadRepository;
     private final HttpServletRequest httpServletRequest;
 
     @Override
@@ -109,6 +111,77 @@ public class LaneServiceImpl implements LaneService {
             throw new IllegalArgumentException(
                     String.format("El lane con ID %d no pertenece al proceso %d", laneId, procesoId));
         }
+    }
+
+    // =====================================================================================
+    // Editar Lane
+    // =====================================================================================
+
+    @Override
+    @Transactional
+    public LaneDTO editarLane(Long laneId, LaneDTO laneDTO) {
+        Lane lane = obtenerLaneEntityById(laneId);
+
+        Proceso proceso = lane.getProceso();
+        Usuario usuarioActual = obtenerUsuarioActual();
+        validarUsuarioPertenecAEmpresa(usuarioActual, proceso.getPool().getEmpresa());
+
+        if (laneDTO.getNombre() != null && !laneDTO.getNombre().isBlank()) {
+            lane.setNombre(laneDTO.getNombre());
+        }
+        if (laneDTO.getDescripcion() != null) {
+            lane.setDescripcion(laneDTO.getDescripcion());
+        }
+        if (laneDTO.getOrden() != null) {
+            lane.setOrden(laneDTO.getOrden());
+        }
+        if (laneDTO.getPosicionX() != null) {
+            lane.setPosicionX(laneDTO.getPosicionX());
+        }
+        if (laneDTO.getPosicionY() != null) {
+            lane.setPosicionY(laneDTO.getPosicionY());
+        }
+
+        // Cambiar RolProceso si se proporciona
+        if (laneDTO.getRolProcesoId() != null) {
+            RolProceso rolProceso = rolProcesoRepository.findById(laneDTO.getRolProcesoId())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "RolProceso no encontrado con ID: " + laneDTO.getRolProcesoId()));
+
+            Empresa empresaProceso = proceso.getPool().getEmpresa();
+            if (rolProceso.getEmpresa() == null || !rolProceso.getEmpresa().getId().equals(empresaProceso.getId())) {
+                throw new IllegalArgumentException(
+                        "El RolProceso no pertenece a la misma empresa del proceso");
+            }
+            lane.setRolProceso(rolProceso);
+        }
+
+        Lane actualizado = laneRepository.save(lane);
+        return convertirADTO(actualizado);
+    }
+
+    // =====================================================================================
+    // Eliminar Lane — valida que no tenga actividades asignadas
+    // =====================================================================================
+
+    @Override
+    @Transactional
+    public void eliminarLane(Long laneId) {
+        Lane lane = obtenerLaneEntityById(laneId);
+
+        Usuario usuarioActual = obtenerUsuarioActual();
+        validarUsuarioPertenecAEmpresa(usuarioActual, lane.getProceso().getPool().getEmpresa());
+
+        // Validar que no tenga actividades asignadas
+        var actividadesEnLane = actividadRepository.findByLaneId(laneId);
+        if (!actividadesEnLane.isEmpty()) {
+            throw new IllegalStateException(
+                    "No se puede eliminar el lane con ID " + laneId
+                            + " porque tiene " + actividadesEnLane.size()
+                            + " actividad(es) asignada(s). Reasígnelas antes de eliminar.");
+        }
+
+        laneRepository.delete(lane);
     }
 
     private LaneDTO convertirADTO(Lane lane) {

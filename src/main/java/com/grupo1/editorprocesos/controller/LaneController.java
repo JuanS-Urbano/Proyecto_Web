@@ -4,11 +4,8 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
+
 import org.springframework.web.bind.annotation.RestController;
 
 import com.grupo1.editorprocesos.dto.ApiResponse;
@@ -43,5 +40,32 @@ public class LaneController {
     public ResponseEntity<ApiResponse<LaneDTO>> obtenerLane(@PathVariable Long laneId) {
         LaneDTO lane = laneService.obtenerLanePorId(laneId);
         return ResponseEntity.ok(new ApiResponse<>(true, "Lane obtenido exitosamente", lane));
+    }
+
+    @PutMapping("/lanes/{laneId}")
+    public ResponseEntity<ApiResponse<LaneDTO>> editarLane(
+            @PathVariable Long laneId,
+            @RequestBody LaneDTO laneDTO) {
+        LaneDTO actualizado = laneService.editarLane(laneId, laneDTO);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Lane actualizado exitosamente", actualizado));
+    }
+
+    /**
+     * Eliminar un lane. Valida que no tenga actividades asignadas.
+     * Requiere ?confirmar=true para proceder.
+     */
+    @DeleteMapping("/lanes/{laneId}")
+    public ResponseEntity<ApiResponse<Void>> eliminarLane(
+            @PathVariable Long laneId,
+            @RequestParam(name = "confirmar", defaultValue = "false") boolean confirmar) {
+
+        if (!confirmar) {
+            return ResponseEntity.badRequest()
+                    .body(new ApiResponse<>(false,
+                            "Se requiere confirmación explícita. Envíe ?confirmar=true para eliminar.", null));
+        }
+
+        laneService.eliminarLane(laneId);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Lane eliminado exitosamente", null));
     }
 }

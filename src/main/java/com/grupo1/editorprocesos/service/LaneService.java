@@ -30,4 +30,14 @@ public interface LaneService {
      * Valida que un lane exista y pertenezca al proceso dado.
      */
     void validarLanePerteneceAlProceso(Long laneId, Long procesoId);
+
+    /**
+     * Edita un lane existente. Registra los cambios aplicados.
+     */
+    LaneDTO editarLane(Long laneId, LaneDTO laneDTO);
+
+    /**
+     * Elimina un lane. Valida que no tenga actividades asignadas antes de eliminar.
+     */
+    void eliminarLane(Long laneId);
 }
