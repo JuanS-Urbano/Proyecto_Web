@@ -26,4 +26,10 @@ public interface ActividadService {
      * Lista todas las actividades de un proceso.
      */
     List<ActividadDTO> listarActividadesPorProceso(Long procesoId);
+
+    /**
+     * Elimina una actividad y maneja los arcos conectados.
+     * Elimina todos los arcos donde la actividad es origen o destino.
+     */
+    void eliminarActividad(Long id);
 }
