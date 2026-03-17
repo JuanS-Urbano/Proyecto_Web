@@ -7,13 +7,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-
-@Repository
-public interface ActividadRepository extends JpaRepository<Actividad, Long> {
-    List<Actividad> findByProcesoId(Long procesoId);
-
-    @Query("SELECT COUNT(a) > 0 FROM Actividad a WHERE a.lane.rolProceso.id = :rolId")
-    boolean existeActividadConRol(@Param("rolId") Long rolId);
 import java.util.Optional;
 
 @Repository
@@ -31,8 +24,15 @@ public interface ActividadRepository extends JpaRepository<Actividad, Long> {
 
     /**
      * Lista todas las actividades asignadas a un lane específico.
-     * TODO (Dev 2 — HU-22): Usado por LaneService para verificar qué actividades
+     * Usado por LaneService para verificar qué actividades
      * están dentro de un lane antes de eliminarlo o modificarlo.
      */
     List<Actividad> findByLaneId(Long laneId);
+
+    /**
+     * HU-19 (Dev 7): Verifica si hay alguna actividad cuyo lane
+     * tenga asignado el RolProceso dado.
+     */
+    @Query("SELECT COUNT(a) > 0 FROM Actividad a WHERE a.lane.rolProceso.id = :rolId")
+    boolean existeActividadConRol(@Param("rolId") Long rolId);
 }
