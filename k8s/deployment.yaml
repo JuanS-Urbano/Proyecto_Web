@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: editorprocesos
+  namespace: grupo23
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: editorprocesos
+  template:
+    metadata:
+      labels:
+        app: editorprocesos
+    spec:
+      imagePullSecrets:
+      - name: ghcr-secret
+      containers:
+      - name: editorprocesos
+        image: ghcr.io/juans-urbano/proyecto_web:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: SPRING_DATASOURCE_URL
+          value: "jdbc:postgresql://190.146.2.119:2345/grupo23"
+        - name: SPRING_DATASOURCE_USERNAME
+          value: "grupo23_user"
+        - name: SPRING_DATASOURCE_PASSWORD
+          value: "G23!Rt9$Qx3@Lm6#Vz8P"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: editorprocesos
+  namespace: grupo23
+spec:
+  selector:
+    app: editorprocesos
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+   name: editorprocesos
+   namespace: grupo23
+spec:
+   ingressClassName: public
+   rules:
+   - host: grupo23.inphotech.co
+     http:
+       paths:
+       - path: /
+         pathType: Prefix
+         backend:
+           service:
+             name: editorprocesos
+             port:
+               number: 8080
