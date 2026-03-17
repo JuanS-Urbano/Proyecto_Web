@@ -4,6 +4,7 @@ import com.grupo1.editorprocesos.dto.RolProcesoDTO;
 import com.grupo1.editorprocesos.exception.ResourceNotFoundException;
 import com.grupo1.editorprocesos.model.entity.core.Empresa;
 import com.grupo1.editorprocesos.model.entity.process.RolProceso;
+import com.grupo1.editorprocesos.repository.ActividadRepository;
 import com.grupo1.editorprocesos.repository.EmpresaRepository;
 import com.grupo1.editorprocesos.repository.RolProcesoRepository;
 import com.grupo1.editorprocesos.service.RolProcesoService;
@@ -21,13 +22,15 @@ public class RolProcesoServiceImpl implements RolProcesoService {
 
     private final RolProcesoRepository rolProcesoRepository;
     private final EmpresaRepository empresaRepository;
+    private final ActividadRepository actividadRepository;
     private final ModelMapper modelMapper;
 
     @Override
     @Transactional
     public RolProcesoDTO crearRol(RolProcesoDTO rolDTO) {
         Empresa empresa = empresaRepository.findById(rolDTO.getEmpresaId())
-                .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada con id: " + rolDTO.getEmpresaId()));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Empresa no encontrada con id: " + rolDTO.getEmpresaId()));
         RolProceso rol = new RolProceso();
         rol.setNombre(rolDTO.getNombre());
         rol.setDescripcion(rolDTO.getDescripcion());
@@ -48,13 +51,29 @@ public class RolProcesoServiceImpl implements RolProcesoService {
         return toDTO(rolProcesoRepository.save(rol));
     }
 
+    // =====================================================================================
+    // HU-19: Eliminar RolProceso — con validación de dependencias
+    // =====================================================================================
+
     @Override
     @Transactional
     public void eliminarRol(Long id) {
         RolProceso rol = findById(id);
+
+        // HU-19: Validar que no esté asignado a ningún Lane
         if (rolProcesoRepository.estaEnUso(id)) {
-            throw new IllegalStateException("El rol no puede eliminarse porque está asignado a una o más lanes.");
+            throw new IllegalStateException(
+                    "No se puede eliminar el rol '" + rol.getNombre()
+                            + "' porque está asignado a uno o más lanes.");
         }
+
+        // HU-19: Validar que no esté referenciado indirectamente por actividades
+        if (actividadRepository.existeActividadConRol(id)) {
+            throw new IllegalStateException(
+                    "No se puede eliminar el rol '" + rol.getNombre()
+                            + "' porque está siendo usado por una o más actividades a través de sus lanes.");
+        }
+
         rolProcesoRepository.delete(rol);
     }
 
@@ -75,7 +94,8 @@ public class RolProcesoServiceImpl implements RolProcesoService {
 
     private RolProceso findById(Long id) {
         return rolProcesoRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Rol de proceso no encontrado con id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Rol de proceso no encontrado con id: " + id));
     }
 
     private RolProcesoDTO toDTO(RolProceso r) {
