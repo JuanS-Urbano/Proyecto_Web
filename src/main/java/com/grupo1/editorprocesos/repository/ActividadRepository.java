@@ -14,4 +14,25 @@ public interface ActividadRepository extends JpaRepository<Actividad, Long> {
 
     @Query("SELECT COUNT(a) > 0 FROM Actividad a WHERE a.lane.rolProceso.id = :rolId")
     boolean existeActividadConRol(@Param("rolId") Long rolId);
+import java.util.Optional;
+
+@Repository
+public interface ActividadRepository extends JpaRepository<Actividad, Long> {
+
+    /**
+     * Lista todas las actividades que pertenecen a un proceso.
+     */
+    List<Actividad> findByProcesoId(Long procesoId);
+
+    /**
+     * Busca una actividad por nombre dentro de un proceso específico.
+     */
+    Optional<Actividad> findByNombreAndProcesoId(String nombre, Long procesoId);
+
+    /**
+     * Lista todas las actividades asignadas a un lane específico.
+     * TODO (Dev 2 — HU-22): Usado por LaneService para verificar qué actividades
+     * están dentro de un lane antes de eliminarlo o modificarlo.
+     */
+    List<Actividad> findByLaneId(Long laneId);
 }

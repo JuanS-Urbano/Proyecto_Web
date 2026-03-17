@@ -4,6 +4,8 @@ import com.grupo1.editorprocesos.model.entity.audit.AuditableEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "empresas")
@@ -23,4 +25,10 @@ public class Empresa extends AuditableEntity {
 
     @Column(name = "correo_contacto", nullable = false, length = 100)
     private String correoContacto;
+
+    @OneToMany(mappedBy = "empresa", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<Pool> pools = new ArrayList<>();
+
+    @OneToMany(mappedBy = "empresa", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<Usuario> usuarios = new ArrayList<>();
 }
