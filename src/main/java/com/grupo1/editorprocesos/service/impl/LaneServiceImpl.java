@@ -20,7 +20,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -85,18 +84,16 @@ public class LaneServiceImpl implements LaneService {
 
         return laneRepository.findByProcesoId(procesoId).stream()
                 .map(this::convertirADTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
-    @Transactional(readOnly = true)
     public LaneDTO obtenerLanePorId(Long laneId) {
         Lane lane = obtenerLaneEntityById(laneId);
         return convertirADTO(lane);
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Lane obtenerLaneEntityById(Long laneId) {
         return laneRepository.findById(laneId)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -104,7 +101,6 @@ public class LaneServiceImpl implements LaneService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public void validarLanePerteneceAlProceso(Long laneId, Long procesoId) {
         Lane lane = obtenerLaneEntityById(laneId);
         if (lane.getProceso() == null || !lane.getProceso().getId().equals(procesoId)) {

@@ -28,7 +28,7 @@ public class AuthServiceImpl implements AuthService {
                         "No se encontró usuario con el email: " + request.getEmail()));
 
         // 2. Validar que el usuario esté activo
-        if (!usuario.getIsActivo()) {
+        if (Boolean.FALSE.equals(usuario.getIsActivo())) {
             throw new UnauthorizedException("La cuenta del usuario está desactivada");
         }
 

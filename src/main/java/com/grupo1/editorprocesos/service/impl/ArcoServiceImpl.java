@@ -26,11 +26,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ArcoServiceImpl implements ArcoService {
+
+    private static final String ARCO_NO_ENCONTRADO = "Arco no encontrado con ID: ";
 
     private final ArcoRepository arcoRepository;
     private final ProcesoRepository procesoRepository;
@@ -98,7 +99,7 @@ public class ArcoServiceImpl implements ArcoService {
         // 1. Buscar arco existente
         Arco arco = arcoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Arco no encontrado con ID: " + id));
+                        ARCO_NO_ENCONTRADO + id));
 
         // 2. Validar pertenencia a empresa
         Proceso proceso = arco.getProceso();
@@ -157,7 +158,7 @@ public class ArcoServiceImpl implements ArcoService {
     public ArcoDTO obtenerArcoPorId(Long id) {
         Arco arco = arcoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Arco no encontrado con ID: " + id));
+                        ARCO_NO_ENCONTRADO + id));
         return convertirADTO(arco);
     }
 
@@ -173,7 +174,7 @@ public class ArcoServiceImpl implements ArcoService {
 
         return arcoRepository.findByProcesoId(procesoId).stream()
                 .map(this::convertirADTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -181,7 +182,7 @@ public class ArcoServiceImpl implements ArcoService {
     public void eliminarArco(Long id) {
         Arco arco = arcoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Arco no encontrado con ID: " + id));
+                        ARCO_NO_ENCONTRADO + id));
 
         Proceso proceso = arco.getProceso();
         Usuario usuarioActual = obtenerUsuarioActual();

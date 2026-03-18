@@ -24,11 +24,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ProcesoServiceImpl implements ProcesoService {
+
+    private static final String POOL_NO_ENCONTRADO = "Pool no encontrado con ID: ";
+    private static final String PROCESO_NO_ENCONTRADO = "Proceso no encontrado con ID: ";
 
     private final ProcesoRepository procesoRepository;
     private final PoolRepository poolRepository;
@@ -47,7 +49,7 @@ public class ProcesoServiceImpl implements ProcesoService {
 
         Pool pool = poolRepository.findById(procesoDTO.getPoolId())
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Pool no encontrado con ID: " + procesoDTO.getPoolId()));
+                        POOL_NO_ENCONTRADO + procesoDTO.getPoolId()));
 
         Empresa empresa = pool.getEmpresa();
         if (empresa == null) {
@@ -64,7 +66,7 @@ public class ProcesoServiceImpl implements ProcesoService {
         proceso.setCategoria(procesoDTO.getCategoria());
         proceso.setEstado(EstadoProceso.BORRADOR);
         Boolean compartido = procesoDTO.getConfiguracionCompartido();
-        proceso.setConfiguracionCompartido(compartido != null ? compartido : false);
+        proceso.setConfiguracionCompartido(Boolean.TRUE.equals(compartido));
         proceso.setPool(pool);
 
         Proceso procesoGuardado = procesoRepository.save(proceso);
@@ -81,7 +83,7 @@ public class ProcesoServiceImpl implements ProcesoService {
     public ProcesoDTO obtenerProcesoById(Long id) {
         Proceso proceso = procesoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Proceso no encontrado con ID: " + id));
+                        PROCESO_NO_ENCONTRADO + id));
         return convertirADTO(proceso);
     }
 
@@ -97,7 +99,7 @@ public class ProcesoServiceImpl implements ProcesoService {
 
         return procesoRepository.findByPoolEmpresaId(empresaId).stream()
                 .map(this::convertirADTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -105,14 +107,14 @@ public class ProcesoServiceImpl implements ProcesoService {
     public List<ProcesoDTO> listarProcesosPorPool(Long poolId) {
         Pool pool = poolRepository.findById(poolId)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Pool no encontrado con ID: " + poolId));
+                        POOL_NO_ENCONTRADO + poolId));
 
         Usuario usuarioActual = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, pool.getEmpresa());
 
         return procesoRepository.findByPoolId(poolId).stream()
                 .map(this::convertirADTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -120,14 +122,14 @@ public class ProcesoServiceImpl implements ProcesoService {
     public List<ProcesoDTO> listarProcesosPorPoolYEstado(Long poolId, EstadoProceso estado) {
         Pool pool = poolRepository.findById(poolId)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Pool no encontrado con ID: " + poolId));
+                        POOL_NO_ENCONTRADO + poolId));
 
         Usuario usuarioActual = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, pool.getEmpresa());
 
         return procesoRepository.findByPoolIdAndEstado(poolId, estado).stream()
                 .map(this::convertirADTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -135,14 +137,14 @@ public class ProcesoServiceImpl implements ProcesoService {
     public List<ProcesoDTO> listarProcesosPorPoolYCategoria(Long poolId, String categoria) {
         Pool pool = poolRepository.findById(poolId)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Pool no encontrado con ID: " + poolId));
+                        POOL_NO_ENCONTRADO + poolId));
 
         Usuario usuarioActual = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, pool.getEmpresa());
 
         return procesoRepository.findByPoolIdAndCategoria(poolId, categoria).stream()
                 .map(this::convertirADTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -150,7 +152,7 @@ public class ProcesoServiceImpl implements ProcesoService {
     public List<ProcesoDTO> listarProcesosPorPoolConFiltros(Long poolId, EstadoProceso estado, String categoria) {
         Pool pool = poolRepository.findById(poolId)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Pool no encontrado con ID: " + poolId));
+                        POOL_NO_ENCONTRADO + poolId));
 
         Usuario usuarioActual = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, pool.getEmpresa());
@@ -169,7 +171,7 @@ public class ProcesoServiceImpl implements ProcesoService {
 
         return procesos.stream()
                 .map(this::convertirADTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -177,14 +179,14 @@ public class ProcesoServiceImpl implements ProcesoService {
     public List<ProcesoDTO> buscarProcesosPorNombre(Long poolId, String nombre) {
         Pool pool = poolRepository.findById(poolId)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Pool no encontrado con ID: " + poolId));
+                        POOL_NO_ENCONTRADO + poolId));
 
         Usuario usuarioActual = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, pool.getEmpresa());
 
         return procesoRepository.findByPoolIdAndNombreContainingIgnoreCase(poolId, nombre).stream()
                 .map(this::convertirADTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -192,7 +194,7 @@ public class ProcesoServiceImpl implements ProcesoService {
     public ProcesoDTO editarProceso(Long id, ProcesoDTO procesoDTO) {
         Proceso proceso = procesoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Proceso no encontrado con ID: " + id));
+                        PROCESO_NO_ENCONTRADO + id));
 
         Usuario usuarioActual = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, proceso.getPool().getEmpresa());
@@ -250,7 +252,7 @@ public class ProcesoServiceImpl implements ProcesoService {
     public void eliminarProceso(Long id) {
         Proceso proceso = procesoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Proceso no encontrado con ID: " + id));
+                        PROCESO_NO_ENCONTRADO + id));
 
         Usuario usuarioActual = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, proceso.getPool().getEmpresa());
@@ -271,14 +273,14 @@ public class ProcesoServiceImpl implements ProcesoService {
     public List<HistorialCambiosDTO> obtenerHistorialProceso(Long procesoId) {
         Proceso proceso = procesoRepository.findById(procesoId)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Proceso no encontrado con ID: " + procesoId));
+                        PROCESO_NO_ENCONTRADO + procesoId));
 
         Usuario usuarioActual = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, proceso.getPool().getEmpresa());
 
         return historialCambiosRepository.findByProcesoId(procesoId).stream()
                 .map(h -> modelMapper.map(h, HistorialCambiosDTO.class))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     // ===== Métodos privados de utilidad =====
