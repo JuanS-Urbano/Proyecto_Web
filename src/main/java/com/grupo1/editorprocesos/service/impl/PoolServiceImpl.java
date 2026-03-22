@@ -18,7 +18,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -59,12 +58,12 @@ public class PoolServiceImpl implements PoolService {
     @Override
     @Transactional(readOnly = true)
     public List<PoolDTO> listarPoolsPorEmpresa(Long empresaId) {
-        empresaRepository.findById(empresaId)
+        Empresa empresa = empresaRepository.findById(empresaId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Empresa no encontrada con id: " + empresaId));
 
         Usuario usuario = obtenerUsuarioActual();
-        validarUsuarioPertenecAEmpresa(usuario, empresaRepository.findById(empresaId).get());
+        validarUsuarioPertenecAEmpresa(usuario, empresa);
 
         return poolRepository.findByEmpresaId(empresaId).stream()
                 .map(pool -> {
@@ -72,7 +71,7 @@ public class PoolServiceImpl implements PoolService {
                     dto.setEmpresaId(empresaId);
                     return dto;
                 })
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override

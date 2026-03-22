@@ -10,33 +10,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/**
- * Controller REST para mensajería BPMN (HU-27 — Message Catch).
- *
- * ─── Cruce Throw/Catch con Dev 1 ──────────────────────────────────────────
- * Dev 1 puede probar el flujo completo sin tener throwMessage() listo:
- *
- *   1. Crear el proceso destino (ya existe vía ProcesoController):
- *      POST /api/v1/procesos
- *
- *   2. Registrar el CATCH (este endpoint):
- *      POST /api/v1/mensajes/catch
- *      Body: {
- *        "nombre": "msgPagoAprobado",
- *        "tipo": "CATCH",
- *        "procesoOrigenId": 1,
- *        "procesoDestinoId": 2,
- *        "payloadJson": null
- *      }
- *
- *   3. Verificar el CATCH registrado:
- *      GET /api/v1/mensajes/{id}
- *      GET /api/v1/mensajes/proceso/{procesoId}
- *
- * Cuando Dev 1 implemente throwMessage(), simplemente llamará
- * POST /api/v1/mensajes/throw con el mismo 'nombre' y el flujo quedará cruzado.
- * ─────────────────────────────────────────────────────────────────────────
- */
 @RestController
 @RequestMapping("/api/v1/mensajes")
 @RequiredArgsConstructor
@@ -88,5 +61,31 @@ public class MensajeController {
         ApiResponse<Void> response = new ApiResponse<>(
                 false, "throwMessage() pendiente de implementación por Dev 1 (HU-25)", null);
         return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(response);
+     * HU-25: Enviar un Message Throw.
+     */
+    @PostMapping("/throw")
+    public ResponseEntity<ApiResponse<MensajeDTO>> throwMessage(@RequestBody MensajeDTO dto) {
+        MensajeDTO creado = mensajeService.throwMessage(dto);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new ApiResponse<>(true, "Mensaje Throw enviado exitosamente", creado));
+    }
+
+    /**
+     * Listar mensajes de un proceso.
+     */
+    @GetMapping("/proceso/{procesoId}")
+    public ResponseEntity<ApiResponse<List<MensajeDTO>>> listarPorProceso(
+            @PathVariable Long procesoId) {
+        List<MensajeDTO> mensajes = mensajeService.listarMensajesPorProceso(procesoId);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Mensajes obtenidos exitosamente", mensajes));
+    }
+
+    /**
+     * Obtener un mensaje por ID.
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<MensajeDTO>> obtenerPorId(@PathVariable Long id) {
+        MensajeDTO mensaje = mensajeService.obtenerMensajePorId(id);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Mensaje obtenido exitosamente", mensaje));
     }
 }

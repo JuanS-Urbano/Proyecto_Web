@@ -23,11 +23,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class GatewayServiceImpl implements GatewayService {
+
+    private static final String GATEWAY_NO_ENCONTRADO = "Gateway no encontrado con ID: ";
 
     private final GatewayRepository gatewayRepository;
     private final ProcesoRepository procesoRepository;
@@ -92,7 +93,7 @@ public class GatewayServiceImpl implements GatewayService {
         // 1. Buscar gateway existente
         Gateway gateway = gatewayRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Gateway no encontrado con ID: " + id));
+                        GATEWAY_NO_ENCONTRADO + id));
 
         // 2. Validar usuario y empresa
         Proceso proceso = gateway.getProceso();
@@ -156,7 +157,7 @@ public class GatewayServiceImpl implements GatewayService {
     public GatewayDTO obtenerGatewayPorId(Long id) {
         Gateway gateway = gatewayRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Gateway no encontrado con ID: " + id));
+                        GATEWAY_NO_ENCONTRADO + id));
         return convertirADTO(gateway);
     }
 
@@ -172,7 +173,7 @@ public class GatewayServiceImpl implements GatewayService {
 
         return gatewayRepository.findByProcesoId(procesoId).stream()
                 .map(this::convertirADTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     // =====================================================================================
@@ -185,7 +186,7 @@ public class GatewayServiceImpl implements GatewayService {
         // 1. Validar existencia del gateway
         Gateway gateway = gatewayRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Gateway no encontrado con ID: " + id));
+                        GATEWAY_NO_ENCONTRADO + id));
 
         // 2. Validar usuario y empresa
         Proceso proceso = gateway.getProceso();

@@ -34,6 +34,15 @@ public interface MensajeService {
 
     /**
      * Lista todos los mensajes CATCH de un proceso destino.
+public interface MensajeService {
+
+    /**
+     * HU-25 (Dev 1): Envía un Message Throw. Valida JSON del payload si se proporciona.
+     */
+    MensajeDTO throwMessage(MensajeDTO dto);
+
+    /**
+     * Lista todos los mensajes de un proceso.
      */
     List<MensajeDTO> listarMensajesPorProceso(Long procesoId);
 
@@ -43,4 +52,7 @@ public interface MensajeService {
      * Se declara aquí para mantener cohesión en la interfaz del servicio.
      */
     MensajeDTO throwMessage(MensajeDTO mensajeDTO);
+     * Obtiene un mensaje por su ID.
+     */
+    MensajeDTO obtenerMensajePorId(Long id);
 }
