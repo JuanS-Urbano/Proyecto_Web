@@ -18,8 +18,14 @@ public class MensajeDTO {
     private String payloadJson;
     private TipoMensaje tipo;
     private EstadoMensaje estado;
-    private Long procesoDestinoId;
     private String correlationKey;
+
+    /** Dev 1 (HU-25): Proceso que genera el THROW */
     private Long procesoId;
+
+    /** Dev 1 (HU-25): Actividad origen del throw */
     private Long actividadOrigenId;
+
+    /** Dev 2 (HU-27): Proceso destino del CATCH */
+    private Long procesoDestinoId;
 }
