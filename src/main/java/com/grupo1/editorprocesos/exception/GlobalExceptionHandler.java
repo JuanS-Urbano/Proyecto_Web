@@ -27,6 +27,12 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.UNAUTHORIZED, ex.getMessage());
     }
 
+    // ── HU-27: MensajeCatchException → 409 CONFLICT ───────────────────────
+    @ExceptionHandler(MensajeCatchException.class)
+    public ResponseEntity<Map<String, Object>> handleMensajeCatch(MensajeCatchException ex) {
+        return buildResponse(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> handleBadRequest(IllegalArgumentException ex) {
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
