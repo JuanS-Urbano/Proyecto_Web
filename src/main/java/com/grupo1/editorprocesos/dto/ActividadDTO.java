@@ -19,8 +19,7 @@ public class ActividadDTO {
 
     /**
      * ID del Lane al que pertenece esta actividad.
-     * TODO (Dev 2): Este campo será utilizado cuando se implemente LaneService.
-     * Al crear/editar una actividad, se debe validar que el laneId pertenezca
+     * Al crear/editar una actividad, se valida que el laneId pertenezca
      * al mismo proceso que la actividad. Si laneId es null, la actividad
      * queda sin asignar a un lane (válido en estado BORRADOR).
      */

@@ -52,4 +52,26 @@ public class ActividadController {
         List<ActividadDTO> actividades = actividadService.listarActividadesPorProceso(procesoId);
         return ResponseEntity.ok(new ApiResponse<>(true, "Actividades del proceso obtenidas exitosamente", actividades));
     }
+
+    /**
+     * HU (DEV5): Eliminar una actividad con saneamiento del grafo.
+     * Requiere el parámetro ?confirmar=true para proceder con la eliminación.
+     * Sin confirmación devuelve HTTP 400 para evitar eliminaciones accidentales.
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> eliminarActividad(
+            @PathVariable Long id,
+            @RequestParam(name = "confirmar", defaultValue = "false") boolean confirmar) {
+
+        if (!confirmar) {
+            return ResponseEntity.badRequest()
+                    .body(new ApiResponse<>(false,
+                            "Se requiere confirmación explícita para eliminar una actividad. "
+                                    + "Envíe ?confirmar=true para proceder.", null));
+        }
+
+        actividadService.eliminarActividad(id);
+        return ResponseEntity.ok(new ApiResponse<>(true,
+                "Actividad eliminada exitosamente. Los arcos conectados fueron saneados.", null));
+    }
 }

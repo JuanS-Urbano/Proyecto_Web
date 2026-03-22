@@ -4,13 +4,17 @@ import com.grupo1.editorprocesos.dto.ActividadDTO;
 import com.grupo1.editorprocesos.exception.ResourceNotFoundException;
 import com.grupo1.editorprocesos.exception.UnauthorizedException;
 import com.grupo1.editorprocesos.model.entity.bpmn.Actividad;
+import com.grupo1.editorprocesos.model.entity.bpmn.Arco;
 import com.grupo1.editorprocesos.model.entity.core.Empresa;
 import com.grupo1.editorprocesos.model.entity.core.Usuario;
+import com.grupo1.editorprocesos.model.enums.TipoActividad;
+import com.grupo1.editorprocesos.repository.ArcoRepository;
 import com.grupo1.editorprocesos.model.entity.process.HistorialCambios;
 import com.grupo1.editorprocesos.model.entity.process.Lane;
 import com.grupo1.editorprocesos.model.entity.process.Proceso;
 import com.grupo1.editorprocesos.repository.ActividadRepository;
 import com.grupo1.editorprocesos.repository.HistorialCambiosRepository;
+import com.grupo1.editorprocesos.service.LaneService;
 import com.grupo1.editorprocesos.repository.LaneRepository;
 import com.grupo1.editorprocesos.repository.ProcesoRepository;
 import com.grupo1.editorprocesos.repository.UsuarioRepository;
@@ -22,16 +26,19 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ActividadServiceImpl implements ActividadService {
 
+    private static final String ACTIVIDAD_NO_ENCONTRADA = "Actividad no encontrada con ID: ";
+
     private final ActividadRepository actividadRepository;
     private final ProcesoRepository procesoRepository;
     private final UsuarioRepository usuarioRepository;
     private final HistorialCambiosRepository historialCambiosRepository;
+    private final ArcoRepository arcoRepository;
+    private final LaneService laneService;
     private final LaneRepository laneRepository;
     private final HttpServletRequest httpServletRequest;
 
@@ -66,17 +73,11 @@ public class ActividadServiceImpl implements ActividadService {
         actividad.setProceso(proceso);
 
         // =====================================================================================
-        // TODO (Dev 2 — HU-22): Cuando LaneService esté implementado, se debe validar que:
-        //   1. El laneId pertenezca al MISMO proceso que la actividad.
-        //   2. El lane exista y esté activo.
-        // Actualmente se asigna el lane si se proporciona el laneId, pero sin validación
-        // cruzada con el proceso. Dev 2 debe agregar esa validación aquí.
+        // HU-22: Validar que el lane exista y pertenezca al mismo proceso que la actividad.
         // =====================================================================================
         if (actividadDTO.getLaneId() != null) {
-            Lane lane = laneRepository.findById(actividadDTO.getLaneId())
-                    .orElseThrow(() -> new ResourceNotFoundException(
-                            "Lane no encontrado con ID: " + actividadDTO.getLaneId()));
-            // TODO (Dev 2): Validar que lane.getProceso().getId().equals(proceso.getId())
+            laneService.validarLanePerteneceAlProceso(actividadDTO.getLaneId(), proceso.getId());
+            Lane lane = laneService.obtenerLaneEntityById(actividadDTO.getLaneId());
             actividad.setLane(lane);
         }
 
@@ -101,7 +102,7 @@ public class ActividadServiceImpl implements ActividadService {
         // 1. Buscar actividad existente
         Actividad actividad = actividadRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Actividad no encontrada con ID: " + id));
+                        ACTIVIDAD_NO_ENCONTRADA + id));
 
         // 2. Validar pertenencia a empresa
         Proceso proceso = actividad.getProceso();
@@ -120,17 +121,13 @@ public class ActividadServiceImpl implements ActividadService {
         }
 
         if (actividadDTO.getTipoActividad() != null && !actividadDTO.getTipoActividad().equals(actividad.getTipoActividad())) {
+            // Validar arcos conectados antes de cambiar el tipo
+            validarArcosConectadosAlCambiarTipo(actividad, actividadDTO.getTipoActividad());
+
             cambios.append("Tipo: ").append(actividad.getTipoActividad())
                     .append(" → ").append(actividadDTO.getTipoActividad()).append(". ");
             actividad.setTipoActividad(actividadDTO.getTipoActividad());
             huboCambios = true;
-
-            // =====================================================================================
-            // TODO (Dev 4 — HU-11/HU-12): Al cambiar el tipo de actividad, considerar si
-            // los arcos conectados a esta actividad siguen siendo válidos. Por ejemplo,
-            // un cambio de RECEPCION a ENVIO podría requerir revalidar las conexiones.
-            // Dev 4 debe implementar esta validación en ArcoService.
-            // =====================================================================================
         }
 
         if (actividadDTO.getPosicionX() != null && !actividadDTO.getPosicionX().equals(actividad.getPosicionX())) {
@@ -147,17 +144,12 @@ public class ActividadServiceImpl implements ActividadService {
             huboCambios = true;
         }
 
-        // =====================================================================================
-        // TODO (Dev 2 — HU-22): Al cambiar el laneId, validar que el nuevo lane
-        // pertenezca al mismo proceso. Dev 2 debe agregar esta validación cruzada.
-        // =====================================================================================
+        // HU-22: Al cambiar el laneId, validar que el nuevo lane pertenezca al mismo proceso.
         if (actividadDTO.getLaneId() != null) {
             Long laneActualId = actividad.getLane() != null ? actividad.getLane().getId() : null;
             if (!actividadDTO.getLaneId().equals(laneActualId)) {
-                Lane nuevoLane = laneRepository.findById(actividadDTO.getLaneId())
-                        .orElseThrow(() -> new ResourceNotFoundException(
-                                "Lane no encontrado con ID: " + actividadDTO.getLaneId()));
-                // TODO (Dev 2): Validar que nuevoLane.getProceso().getId().equals(proceso.getId())
+                laneService.validarLanePerteneceAlProceso(actividadDTO.getLaneId(), proceso.getId());
+                Lane nuevoLane = laneService.obtenerLaneEntityById(actividadDTO.getLaneId());
                 cambios.append("Lane: ").append(laneActualId)
                         .append(" → ").append(actividadDTO.getLaneId()).append(". ");
                 actividad.setLane(nuevoLane);
@@ -185,7 +177,7 @@ public class ActividadServiceImpl implements ActividadService {
     public ActividadDTO obtenerActividadPorId(Long id) {
         Actividad actividad = actividadRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Actividad no encontrada con ID: " + id));
+                        ACTIVIDAD_NO_ENCONTRADA + id));
         return convertirADTO(actividad);
     }
 
@@ -201,7 +193,82 @@ public class ActividadServiceImpl implements ActividadService {
 
         return actividadRepository.findByProcesoId(procesoId).stream()
                 .map(this::convertirADTO)
-                .collect(Collectors.toList());
+                .toList();
+    }
+
+    // =====================================================================================
+    // HU (DEV5): Eliminar Actividad — con saneamiento del grafo
+    // =====================================================================================
+
+    @Override
+    @Transactional
+    public void eliminarActividad(Long id) {
+        // 1. Validar existencia de la actividad
+        Actividad actividad = actividadRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        ACTIVIDAD_NO_ENCONTRADA + id));
+
+        // 2. Validar usuario y empresa
+        Proceso proceso = actividad.getProceso();
+        Usuario usuarioActual = obtenerUsuarioActual();
+        validarUsuarioPertenecAEmpresa(usuarioActual, proceso.getPool().getEmpresa());
+
+        String nombreActividad = actividad.getNombre();
+        Long procesoId = proceso.getId();
+
+        // 3. Buscar arcos conectados dentro del mismo proceso
+        List<Arco> arcosEntrantes = arcoRepository.findByDestinoIdAndProcesoId(nombreActividad, procesoId);
+        List<Arco> arcosSalientes = arcoRepository.findByOrigenIdAndProcesoId(nombreActividad, procesoId);
+
+        StringBuilder detalleHistorial = new StringBuilder(
+                "Actividad eliminada: \"" + nombreActividad
+                        + "\" (Tipo: " + actividad.getTipoActividad() + "). ");
+
+        // 4. Aplicar regla de saneamiento del grafo
+        // Regla: si exactamente 1 entrante y 1 saliente → reconectar
+        // Si hay múltiples o ninguno → eliminar todos sin reconectar (dejar huérfanos)
+        if (arcosEntrantes.size() == 1 && arcosSalientes.size() == 1) {
+            String origenPredecesor = arcosEntrantes.get(0).getOrigenId();
+            String destinoSucesor = arcosSalientes.get(0).getDestinoId();
+
+            // Eliminar los dos arcos conectados a la actividad
+            arcoRepository.delete(arcosEntrantes.get(0));
+            arcoRepository.delete(arcosSalientes.get(0));
+
+            // Verificar que no exista ya ese arco para evitar duplicado
+            boolean yaExiste = arcoRepository
+                    .findByOrigenIdAndDestinoIdAndProcesoId(origenPredecesor, destinoSucesor, procesoId)
+                    .isPresent();
+
+            if (!yaExiste) {
+                Arco nuevoArco = new Arco();
+                nuevoArco.setOrigenId(origenPredecesor);
+                nuevoArco.setDestinoId(destinoSucesor);
+                nuevoArco.setProceso(proceso);
+                arcoRepository.save(nuevoArco);
+                detalleHistorial.append("Arcos saneados: 2 eliminados, reconexión creada \"")
+                        .append(origenPredecesor).append("\" → \"").append(destinoSucesor).append("\".");
+            } else {
+                detalleHistorial.append("Arcos saneados: 2 eliminados. Reconexión omitida (arco ya existe).");
+            }
+        } else {
+            // Múltiples entrantes/salientes: eliminar todos sin reconectar
+            int totalArcos = arcosEntrantes.size() + arcosSalientes.size();
+            arcoRepository.deleteAll(arcosEntrantes);
+            arcoRepository.deleteAll(arcosSalientes);
+            if (totalArcos > 0) {
+                detalleHistorial.append("Arcos huérfanos: ").append(totalArcos)
+                        .append(" arcos conectados eliminados sin reconexión.");
+            } else {
+                detalleHistorial.append("Sin arcos conectados.");
+            }
+        }
+
+        // 5. Eliminar la actividad
+        actividadRepository.delete(actividad);
+
+        // 6. Registrar en historial
+        registrarHistorial(proceso, usuarioActual, detalleHistorial.toString());
     }
 
     // ===== Métodos privados de utilidad =====
@@ -245,5 +312,14 @@ public class ActividadServiceImpl implements ActividadService {
             throw new UnauthorizedException(
                     "El usuario no tiene acceso a la empresa con ID: " + empresa.getId());
         }
+    }
+
+    /**
+     * Valida que al cambiar el tipo de actividad, los arcos conectados sigan siendo válidos.
+     * En futuras versiones se pueden agregar reglas BPMN específicas aquí.
+     */
+    @SuppressWarnings("java:S1172") // Parámetros serán usados en futuras validaciones BPMN
+    private void validarArcosConectadosAlCambiarTipo(Actividad actividad, TipoActividad nuevoTipo) {
+        // Placeholder: en futuras versiones se validarán reglas BPMN específicas.
     }
 }

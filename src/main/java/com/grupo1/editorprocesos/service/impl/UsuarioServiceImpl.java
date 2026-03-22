@@ -62,9 +62,14 @@ public class UsuarioServiceImpl implements UsuarioService {
     @Override
     @Transactional
     public void crearAdminInicial(Empresa empresa, String emailContacto) {
+        // Generar una contraseña aleatoria segura para el admin inicial.
+        // En producción, esta contraseña debe ser comunicada al administrador
+        // o se debe implementar un flujo de reseteo de contraseña.
+        String generatedPassword = java.util.UUID.randomUUID().toString();
+
         Usuario admin = new Usuario();
         admin.setEmail(emailContacto);
-        admin.setPassword(passwordEncoder.encode("admin123")); // Contraseña hasheada con BCrypt
+        admin.setPassword(passwordEncoder.encode(generatedPassword));
         admin.setEmpresa(empresa);
         admin.setRolSistema(RolSistema.ADMIN_EMPRESA);
         admin.setIsActivo(true);
