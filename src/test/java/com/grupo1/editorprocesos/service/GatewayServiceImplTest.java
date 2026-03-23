@@ -43,6 +43,9 @@ class GatewayServiceImplTest {
     private GatewayRepository gatewayRepository;
 
     @Mock
+    private com.grupo1.editorprocesos.service.PermisosPoolService permisosPoolService;
+
+    @Mock
     private ProcesoRepository procesoRepository;
 
     @Mock

@@ -112,4 +112,49 @@ class EmpresaServiceImplTest {
         assertThatThrownBy(() -> empresaService.obtenerEmpresaPorId(99L))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
+
+    @Test
+    void listarEmpresas_listaVacia() {
+        when(empresaRepository.findAll()).thenReturn(List.of());
+
+        List<EmpresaDTO> result = empresaService.listarEmpresas();
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void crearEmpresa_invocaCrearAdminInicial() {
+        EmpresaDTO dto = new EmpresaDTO();
+        dto.setNit("999");
+        dto.setCorreoContacto("contacto@nueva.com");
+
+        Empresa empresa = new Empresa();
+        empresa.setId(2L);
+
+        when(empresaRepository.existsByNit("999")).thenReturn(false);
+        when(modelMapper.map(dto, Empresa.class)).thenReturn(empresa);
+        when(empresaRepository.save(empresa)).thenReturn(empresa);
+        when(modelMapper.map(empresa, EmpresaDTO.class)).thenReturn(new EmpresaDTO());
+
+        empresaService.crearEmpresa(dto);
+
+        verify(usuarioService).crearAdminInicial(empresa, "contacto@nueva.com");
+    }
+
+    @Test
+    void obtenerEmpresaPorId_retornaDTOMapeado() {
+        Empresa empresa = new Empresa();
+        empresa.setId(1L);
+
+        EmpresaDTO dto = new EmpresaDTO();
+        dto.setNit("ABC");
+
+        when(empresaRepository.findById(1L)).thenReturn(Optional.of(empresa));
+        when(modelMapper.map(empresa, EmpresaDTO.class)).thenReturn(dto);
+
+        EmpresaDTO result = empresaService.obtenerEmpresaPorId(1L);
+
+        assertThat(result.getNit()).isEqualTo("ABC");
+    }
 }
+

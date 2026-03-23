@@ -127,4 +127,35 @@ class AuthServiceImplTest {
 
         assertThat(response.getEmpresaId()).isNull();
     }
+
+    @Test
+    void login_retornaTokenConIdDeUsuario() {
+        AuthRequestDTO request = new AuthRequestDTO();
+        request.setEmail("test@empresa.com");
+        request.setPassword("plainPassword");
+
+        when(usuarioRepository.findByEmail("test@empresa.com")).thenReturn(Optional.of(usuario));
+        when(passwordEncoder.matches("plainPassword", "hashedPassword")).thenReturn(true);
+
+        AuthResponseDTO response = authService.login(request);
+
+        assertThat(response.getToken()).isEqualTo("session-10");
+    }
+
+    @Test
+    void login_conRolLector_retornaRolCorrecto() {
+        usuario.setRolSistema(RolSistema.LECTOR);
+
+        AuthRequestDTO request = new AuthRequestDTO();
+        request.setEmail("test@empresa.com");
+        request.setPassword("plainPassword");
+
+        when(usuarioRepository.findByEmail("test@empresa.com")).thenReturn(Optional.of(usuario));
+        when(passwordEncoder.matches("plainPassword", "hashedPassword")).thenReturn(true);
+
+        AuthResponseDTO response = authService.login(request);
+
+        assertThat(response.getRolSistema()).isEqualTo("LECTOR");
+    }
 }
+

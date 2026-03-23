@@ -120,4 +120,63 @@ class UsuarioServiceImplTest {
         assertThat(admin.getIsActivo()).isTrue();
         assertThat(admin.getEmpresa()).isEqualTo(empresa);
     }
+
+    @Test
+    void crearUsuario_asignaRolLector_yActivo() {
+        UsuarioCreateDTO createDTO = new UsuarioCreateDTO();
+        createDTO.setEmail("lector@empresa.com");
+        createDTO.setPassword("pass123");
+        createDTO.setEmpresaId(1L);
+
+        Usuario usuario = new Usuario();
+        usuario.setId(11L);
+
+        UsuarioDTO dtoSalida = new UsuarioDTO();
+        dtoSalida.setEmail("lector@empresa.com");
+
+        when(usuarioRepository.findByEmail("lector@empresa.com")).thenReturn(Optional.empty());
+        when(empresaRepository.findById(1L)).thenReturn(Optional.of(empresa));
+        when(modelMapper.map(createDTO, Usuario.class)).thenReturn(usuario);
+        when(passwordEncoder.encode("pass123")).thenReturn("hashedPass");
+        when(usuarioRepository.save(any(Usuario.class))).thenReturn(usuario);
+        when(modelMapper.map(usuario, UsuarioDTO.class)).thenReturn(dtoSalida);
+
+        usuarioService.crearUsuario(createDTO);
+
+        ArgumentCaptor<Usuario> captor = ArgumentCaptor.forClass(Usuario.class);
+        verify(usuarioRepository).save(captor.capture());
+
+        Usuario saved = captor.getValue();
+        assertThat(saved.getRolSistema()).isEqualTo(RolSistema.LECTOR);
+        assertThat(saved.getIsActivo()).isTrue();
+        assertThat(saved.getPassword()).isEqualTo("hashedPass");
+    }
+
+    @Test
+    void crearUsuario_estableceEmpresaCorrecta() {
+        UsuarioCreateDTO createDTO = new UsuarioCreateDTO();
+        createDTO.setEmail("otro@empresa.com");
+        createDTO.setPassword("pass");
+        createDTO.setEmpresaId(1L);
+
+        Usuario usuario = new Usuario();
+        usuario.setId(12L);
+
+        UsuarioDTO dtoSalida = new UsuarioDTO();
+
+        when(usuarioRepository.findByEmail("otro@empresa.com")).thenReturn(Optional.empty());
+        when(empresaRepository.findById(1L)).thenReturn(Optional.of(empresa));
+        when(modelMapper.map(createDTO, Usuario.class)).thenReturn(usuario);
+        when(passwordEncoder.encode("pass")).thenReturn("hashed");
+        when(usuarioRepository.save(any(Usuario.class))).thenReturn(usuario);
+        when(modelMapper.map(usuario, UsuarioDTO.class)).thenReturn(dtoSalida);
+
+        UsuarioDTO result = usuarioService.crearUsuario(createDTO);
+
+        assertThat(result.getEmpresaId()).isEqualTo(1L);
+        ArgumentCaptor<Usuario> captor = ArgumentCaptor.forClass(Usuario.class);
+        verify(usuarioRepository).save(captor.capture());
+        assertThat(captor.getValue().getEmpresa()).isEqualTo(empresa);
+    }
 }
+

@@ -16,6 +16,7 @@ import com.grupo1.editorprocesos.repository.HistorialCambiosRepository;
 import com.grupo1.editorprocesos.repository.ProcesoRepository;
 import com.grupo1.editorprocesos.repository.UsuarioRepository;
 import com.grupo1.editorprocesos.service.GatewayService;
+import com.grupo1.editorprocesos.service.PermisosPoolService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -36,6 +37,7 @@ public class GatewayServiceImpl implements GatewayService {
     private final HistorialCambiosRepository historialCambiosRepository;
     private final ArcoRepository arcoRepository;
     private final HttpServletRequest httpServletRequest;
+    private final PermisosPoolService permisosPoolService;
 
     // =====================================================================================
     // HU-15: Crear Gateway
@@ -52,6 +54,7 @@ public class GatewayServiceImpl implements GatewayService {
         // 2. Validar usuario y empresa
         Usuario usuarioActual = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, proceso.getPool().getEmpresa());
+        permisosPoolService.validarPermisoEscritura(usuarioActual);
 
         // 3. Validar tipo de gateway
         if (gatewayDTO.getTipoGateway() == null) {
@@ -99,6 +102,7 @@ public class GatewayServiceImpl implements GatewayService {
         Proceso proceso = gateway.getProceso();
         Usuario usuarioActual = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, proceso.getPool().getEmpresa());
+        permisosPoolService.validarPermisoEscritura(usuarioActual);
 
         // 3. Rastrear cambios
         StringBuilder cambios = new StringBuilder("Gateway editado (ID: " + id + "): ");

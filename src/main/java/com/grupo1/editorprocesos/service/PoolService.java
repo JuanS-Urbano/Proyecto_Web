@@ -10,4 +10,6 @@ public interface PoolService {
     List<PoolDTO> listarPoolsPorEmpresa(Long empresaId);
 
     PoolDTO editarPool(Long id, PoolDTO poolDTO);
+
+    void eliminarPool(Long id);
 }
