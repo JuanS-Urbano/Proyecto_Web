@@ -24,6 +24,7 @@ import com.grupo1.editorprocesos.model.entity.core.Usuario;
 import com.grupo1.editorprocesos.model.enums.RolSistema;
 import com.grupo1.editorprocesos.repository.EmpresaRepository;
 import com.grupo1.editorprocesos.repository.PoolRepository;
+import com.grupo1.editorprocesos.repository.ProcesoRepository;
 import com.grupo1.editorprocesos.repository.UsuarioRepository;
 import com.grupo1.editorprocesos.service.impl.PoolServiceImpl;
 
@@ -34,6 +35,9 @@ class PoolServiceImplTest {
 
     @Mock
     private PoolRepository poolRepository;
+
+    @Mock
+    private ProcesoRepository procesoRepository;
 
     @Mock
     private EmpresaRepository empresaRepository;

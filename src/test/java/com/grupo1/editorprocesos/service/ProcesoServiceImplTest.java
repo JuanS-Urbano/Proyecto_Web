@@ -42,6 +42,9 @@ class ProcesoServiceImplTest {
     private ProcesoRepository procesoRepository;
 
     @Mock
+    private com.grupo1.editorprocesos.service.PermisosPoolService permisosPoolService;
+
+    @Mock
     private PoolRepository poolRepository;
 
     @Mock

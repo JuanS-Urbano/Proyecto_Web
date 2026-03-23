@@ -19,6 +19,7 @@ import com.grupo1.editorprocesos.repository.LaneRepository;
 import com.grupo1.editorprocesos.repository.ProcesoRepository;
 import com.grupo1.editorprocesos.repository.UsuarioRepository;
 import com.grupo1.editorprocesos.service.ActividadService;
+import com.grupo1.editorprocesos.service.PermisosPoolService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -41,6 +42,7 @@ public class ActividadServiceImpl implements ActividadService {
     private final LaneService laneService;
     private final LaneRepository laneRepository;
     private final HttpServletRequest httpServletRequest;
+    private final PermisosPoolService permisosPoolService;
 
     // =====================================================================================
     // HU-08: Crear Actividad
@@ -58,6 +60,7 @@ public class ActividadServiceImpl implements ActividadService {
         Usuario usuarioActual = obtenerUsuarioActual();
         Empresa empresa = proceso.getPool().getEmpresa();
         validarUsuarioPertenecAEmpresa(usuarioActual, empresa);
+        permisosPoolService.validarPermisoEscritura(usuarioActual);
 
         // 3. Validar tipo de actividad
         if (actividadDTO.getTipoActividad() == null) {
@@ -108,6 +111,7 @@ public class ActividadServiceImpl implements ActividadService {
         Proceso proceso = actividad.getProceso();
         Usuario usuarioActual = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, proceso.getPool().getEmpresa());
+        permisosPoolService.validarPermisoEscritura(usuarioActual);
 
         // 3. Rastrear cambios campo por campo
         StringBuilder cambios = new StringBuilder("Actividad editada (ID: " + id + "): ");

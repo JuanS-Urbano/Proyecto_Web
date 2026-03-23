@@ -35,4 +35,10 @@ public class PoolController {
         PoolDTO actualizado = poolService.editarPool(id, poolDTO);
         return ResponseEntity.ok(new ApiResponse<>(true, "Pool actualizado exitosamente", actualizado));
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> eliminarPool(@PathVariable Long id) {
+        poolService.eliminarPool(id);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Pool eliminado exitosamente", null));
+    }
 }

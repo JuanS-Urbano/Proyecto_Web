@@ -17,6 +17,7 @@ import com.grupo1.editorprocesos.repository.PoolRepository;
 import com.grupo1.editorprocesos.repository.ProcesoRepository;
 import com.grupo1.editorprocesos.repository.UsuarioRepository;
 import com.grupo1.editorprocesos.service.ProcesoService;
+import com.grupo1.editorprocesos.service.PermisosPoolService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -44,6 +45,7 @@ public class ProcesoServiceImpl implements ProcesoService {
     private final HistorialCambiosRepository historialCambiosRepository;
     private final ModelMapper modelMapper;
     private final HttpServletRequest httpServletRequest;
+    private final PermisosPoolService permisosPoolService;
 
     @Override
     @Transactional
@@ -64,6 +66,7 @@ public class ProcesoServiceImpl implements ProcesoService {
 
         Usuario usuarioActual = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, empresa);
+        permisosPoolService.validarPermisoEscritura(usuarioActual);
 
         Proceso proceso = new Proceso();
         proceso.setNombre(procesoDTO.getNombre());

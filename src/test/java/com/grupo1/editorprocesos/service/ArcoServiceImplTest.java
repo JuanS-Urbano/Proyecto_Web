@@ -41,6 +41,9 @@ class ArcoServiceImplTest {
     private ArcoRepository arcoRepository;
 
     @Mock
+    private com.grupo1.editorprocesos.service.PermisosPoolService permisosPoolService;
+
+    @Mock
     private ProcesoRepository procesoRepository;
 
     @Mock

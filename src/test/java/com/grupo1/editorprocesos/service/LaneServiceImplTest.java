@@ -49,6 +49,9 @@ class LaneServiceImplTest {
     @Mock
     private HttpServletRequest httpServletRequest;
 
+    @Mock
+    private com.grupo1.editorprocesos.service.PermisosPoolService permisosPoolService;
+
     @InjectMocks
     private LaneServiceImpl laneService;
 
@@ -256,7 +259,7 @@ class LaneServiceImplTest {
 
         // Inyectamos esto
         laneService = new LaneServiceImpl(laneRepository, procesoRepository, rolProcesoRepository,
-                usuarioRepository, actividadRepository, httpServletRequest);
+                usuarioRepository, actividadRepository, httpServletRequest, permisosPoolService);
 
         laneService.eliminarLane(1L);
 
@@ -278,7 +281,7 @@ class LaneServiceImplTest {
 
         // Inyectamos esto
         laneService = new LaneServiceImpl(laneRepository, procesoRepository, rolProcesoRepository,
-                usuarioRepository, actividadRepository, httpServletRequest);
+                usuarioRepository, actividadRepository, httpServletRequest, permisosPoolService);
 
         assertThatThrownBy(() -> laneService.eliminarLane(1L))
                 .isInstanceOf(IllegalStateException.class);

@@ -14,6 +14,7 @@ import com.grupo1.editorprocesos.repository.ProcesoRepository;
 import com.grupo1.editorprocesos.repository.RolProcesoRepository;
 import com.grupo1.editorprocesos.repository.UsuarioRepository;
 import com.grupo1.editorprocesos.service.LaneService;
+import com.grupo1.editorprocesos.service.PermisosPoolService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,7 @@ public class LaneServiceImpl implements LaneService {
     private final UsuarioRepository usuarioRepository;
     private final ActividadRepository actividadRepository;
     private final HttpServletRequest httpServletRequest;
+    private final PermisosPoolService permisosPoolService;
 
     @Override
     @Transactional
@@ -41,6 +43,7 @@ public class LaneServiceImpl implements LaneService {
 
         Usuario usuarioActual = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, proceso.getPool().getEmpresa());
+        permisosPoolService.validarPermisoEscritura(usuarioActual);
 
         if (laneDTO.getNombre() == null || laneDTO.getNombre().isBlank()) {
             throw new IllegalArgumentException("El nombre del lane es requerido");
@@ -121,6 +124,7 @@ public class LaneServiceImpl implements LaneService {
         Proceso proceso = lane.getProceso();
         Usuario usuarioActual = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, proceso.getPool().getEmpresa());
+        permisosPoolService.validarPermisoEscritura(usuarioActual);
 
         if (laneDTO.getNombre() != null && !laneDTO.getNombre().isBlank()) {
             lane.setNombre(laneDTO.getNombre());
@@ -167,6 +171,7 @@ public class LaneServiceImpl implements LaneService {
 
         Usuario usuarioActual = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, lane.getProceso().getPool().getEmpresa());
+        permisosPoolService.validarPermisoEscritura(usuarioActual);
 
         // Validar que no tenga actividades asignadas
         var actividadesEnLane = actividadRepository.findByLaneId(laneId);
