@@ -63,13 +63,13 @@ class PermisosPoolServiceImplTest {
     @Test
     void validarPermisoEscritura_adminPlataforma_noLanzaExcepcion() {
         Usuario usuario = crearUsuarioConRol(RolSistema.ADMIN_PLATAFORMA);
-        permisosPoolService.validarPermisoEscritura(usuario); // No debe lanzar excepción
+        org.junit.jupiter.api.Assertions.assertDoesNotThrow(() -> permisosPoolService.validarPermisoEscritura(usuario));
     }
 
     @Test
     void validarPermisoEscritura_editor_noLanzaExcepcion() {
         Usuario usuario = crearUsuarioConRol(RolSistema.EDITOR);
-        permisosPoolService.validarPermisoEscritura(usuario); // No debe lanzar excepción
+        org.junit.jupiter.api.Assertions.assertDoesNotThrow(() -> permisosPoolService.validarPermisoEscritura(usuario));
     }
 
     @Test
@@ -86,7 +86,7 @@ class PermisosPoolServiceImplTest {
     void validarPermisoLectura_todosLosRoles_noLanzaExcepcion() {
         for (RolSistema rol : RolSistema.values()) {
             Usuario usuario = crearUsuarioConRol(rol);
-            permisosPoolService.validarPermisoLectura(usuario); // Ninguno debe lanzar excepción
+            org.junit.jupiter.api.Assertions.assertDoesNotThrow(() -> permisosPoolService.validarPermisoLectura(usuario));
         }
     }
 

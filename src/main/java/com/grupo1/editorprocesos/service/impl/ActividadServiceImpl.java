@@ -33,7 +33,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ActividadServiceImpl implements ActividadService {
 
-    private static final String ACTIVIDAD_NO_ENCONTRADA = "Actividad no encontrada con ID: ";
+    private static final String ACTIVIDAD_NO_ENCONTRADA = "No se encontro la actividad con ID: ";
 
     private final ActividadRepository actividadRepository;
     private final ProcesoRepository procesoRepository;

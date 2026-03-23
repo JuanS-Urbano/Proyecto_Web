@@ -30,7 +30,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class GatewayServiceImpl implements GatewayService {
 
-    private static final String GATEWAY_NO_ENCONTRADO = "Gateway no encontrado con ID: ";
+    private static final String GATEWAY_NO_ENCONTRADO = "No se encontro el gateway con ID: ";
 
     private final GatewayRepository gatewayRepository;
     private final ProcesoRepository procesoRepository;

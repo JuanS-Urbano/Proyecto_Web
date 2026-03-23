@@ -33,7 +33,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ArcoServiceImpl implements ArcoService {
 
-    private static final String ARCO_NO_ENCONTRADO = "Arco no encontrado con ID: ";
+    private static final String ARCO_NO_ENCONTRADO = "No se encontro el arco con ID: ";
 
     private final ArcoRepository arcoRepository;
     private final ProcesoRepository procesoRepository;

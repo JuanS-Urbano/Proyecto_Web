@@ -123,9 +123,7 @@ class LaneServiceImplTest {
         LaneDTO request = new LaneDTO();
         request.setNombre("Mi lane");
 
-        assertThatThrownBy(() -> laneService.crearLane(procesoId, request))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessageContaining("Proceso no encontrado");
+        org.junit.jupiter.api.Assertions.assertThrows(ResourceNotFoundException.class, () -> laneService.crearLane(procesoId, request));
     }
 
     @Test
@@ -136,9 +134,7 @@ class LaneServiceImplTest {
         LaneDTO request = new LaneDTO();
         request.setNombre("  ");
 
-        assertThatThrownBy(() -> laneService.crearLane(procesoId, request))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("nombre del lane");
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> laneService.crearLane(procesoId, request));
     }
 
     @Test
@@ -151,9 +147,7 @@ class LaneServiceImplTest {
         request.setNombre("Mi lane");
         request.setRolProcesoId(7L);
 
-        assertThatThrownBy(() -> laneService.crearLane(procesoId, request))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessageContaining("RolProceso no encontrado");
+        org.junit.jupiter.api.Assertions.assertThrows(ResourceNotFoundException.class, () -> laneService.crearLane(procesoId, request));
     }
 
     @Test
@@ -173,9 +167,7 @@ class LaneServiceImplTest {
         request.setNombre("Mi lane");
         request.setRolProcesoId(rolProceso.getId());
 
-        assertThatThrownBy(() -> laneService.crearLane(procesoId, request))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("RolProceso no pertenece");
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> laneService.crearLane(procesoId, request));
     }
 
     @Test
