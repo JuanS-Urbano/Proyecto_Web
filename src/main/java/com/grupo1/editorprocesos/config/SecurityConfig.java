@@ -11,7 +11,7 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) {
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         // En esta fase 1 permitimos todas las peticiones para facilitar el desarrollo.
         // En la fase 3 (Seguridad) se agregarán los filtros JWT y la autorización por roles.
         http
