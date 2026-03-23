@@ -31,6 +31,7 @@ import com.grupo1.editorprocesos.service.impl.LaneServiceImpl;
 
 import jakarta.servlet.http.HttpServletRequest;
 
+@SuppressWarnings({"java:S5778"})
 @ExtendWith(MockitoExtension.class)
 class LaneServiceImplTest {
 

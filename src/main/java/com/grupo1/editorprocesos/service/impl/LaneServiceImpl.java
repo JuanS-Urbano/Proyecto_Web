@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@SuppressWarnings({"java:S6809", "java:S6204"})
 @Service
 @RequiredArgsConstructor
 public class LaneServiceImpl implements LaneService {

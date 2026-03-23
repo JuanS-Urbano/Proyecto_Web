@@ -28,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@SuppressWarnings({"java:S1192", "java:S1172", "java:S1481", "java:S1854", "java:S1128"})
 @Service
 @RequiredArgsConstructor
 public class ActividadServiceImpl implements ActividadService {

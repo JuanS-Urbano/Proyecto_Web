@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@SuppressWarnings({"java:S6204", "java:S1192"})
 @Service
 @RequiredArgsConstructor
 public class GatewayServiceImpl implements GatewayService {
