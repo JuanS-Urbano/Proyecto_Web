@@ -177,4 +177,65 @@ class PoolServiceImplTest {
         assertThatThrownBy(() -> poolService.editarPool(5L, dto))
                 .isInstanceOf(UnauthorizedException.class);
     }
+
+    @Test
+    void editarPool_noEncontrado() {
+        when(poolRepository.findById(99L)).thenReturn(Optional.empty());
+
+        PoolDTO dto = new PoolDTO();
+        dto.setNombre("Test");
+
+        assertThatThrownBy(() -> poolService.editarPool(99L, dto))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void listarPoolsPorEmpresa_empresaNoEncontrada() {
+        when(empresaRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> poolService.listarPoolsPorEmpresa(99L))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void crearPool_conAdminPlataforma_exitoso() {
+        usuario.setRolSistema(RolSistema.ADMIN_PLATAFORMA);
+
+        PoolDTO dto = new PoolDTO();
+        dto.setNombre("Pool Admin");
+        dto.setEmpresaId(1L);
+
+        Pool pool = new Pool();
+        pool.setId(10L);
+        pool.setNombre("Pool Admin");
+        pool.setEmpresa(empresa);
+
+        PoolDTO resultado = new PoolDTO();
+        resultado.setNombre("Pool Admin");
+
+        when(empresaRepository.findById(1L)).thenReturn(Optional.of(empresa));
+        when(poolRepository.save(any(Pool.class))).thenReturn(pool);
+        when(modelMapper.map(pool, PoolDTO.class)).thenReturn(resultado);
+
+        PoolDTO result = poolService.crearPool(dto);
+
+        assertThat(result.getNombre()).isEqualTo("Pool Admin");
+    }
+
+    @Test
+    void crearPool_usuarioOtraEmpresa() {
+        Empresa otraEmpresa = new Empresa();
+        otraEmpresa.setId(99L);
+        usuario.setEmpresa(otraEmpresa);
+
+        PoolDTO dto = new PoolDTO();
+        dto.setEmpresaId(1L);
+
+        when(empresaRepository.findById(1L)).thenReturn(Optional.of(empresa));
+
+        assertThatThrownBy(() -> poolService.crearPool(dto))
+                .isInstanceOf(UnauthorizedException.class)
+                .hasMessageContaining("no tiene acceso");
+    }
 }
+
