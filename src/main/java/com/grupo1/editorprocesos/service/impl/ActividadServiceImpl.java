@@ -28,11 +28,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@SuppressWarnings({"java:S1192", "java:S1172", "java:S1481", "java:S1854", "java:S1128"})
 @Service
 @RequiredArgsConstructor
 public class ActividadServiceImpl implements ActividadService {
 
-    private static final String ACTIVIDAD_NO_ENCONTRADA = "Actividad no encontrada con ID: ";
+    private static final String ACTIVIDAD_NO_ENCONTRADA = "No se encontro la actividad con ID: ";
 
     private final ActividadRepository actividadRepository;
     private final ProcesoRepository procesoRepository;

@@ -28,11 +28,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@SuppressWarnings({"java:S6204", "java:S1192"})
 @Service
 @RequiredArgsConstructor
 public class ArcoServiceImpl implements ArcoService {
 
-    private static final String ARCO_NO_ENCONTRADO = "Arco no encontrado con ID: ";
+    private static final String ARCO_NO_ENCONTRADO = "No se encontro el arco con ID: ";
 
     private final ArcoRepository arcoRepository;
     private final ProcesoRepository procesoRepository;

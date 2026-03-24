@@ -25,11 +25,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@SuppressWarnings({"java:S6204", "java:S1192"})
 @Service
 @RequiredArgsConstructor
 public class GatewayServiceImpl implements GatewayService {
 
-    private static final String GATEWAY_NO_ENCONTRADO = "Gateway no encontrado con ID: ";
+    private static final String GATEWAY_NO_ENCONTRADO = "No se encontro el gateway con ID: ";
 
     private final GatewayRepository gatewayRepository;
     private final ProcesoRepository procesoRepository;

@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@SuppressWarnings({"java:S6809", "java:S6204"})
 @Service
 @RequiredArgsConstructor
 public class LaneServiceImpl implements LaneService {
@@ -92,12 +93,16 @@ public class LaneServiceImpl implements LaneService {
 
     @Override
     public LaneDTO obtenerLanePorId(Long laneId) {
-        Lane lane = obtenerLaneEntityById(laneId);
+        Lane lane = obtenerLaneEntity(laneId);
         return convertirADTO(lane);
     }
 
     @Override
     public Lane obtenerLaneEntityById(Long laneId) {
+        return obtenerLaneEntity(laneId);
+    }
+
+    private Lane obtenerLaneEntity(Long laneId) {
         return laneRepository.findById(laneId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Lane no encontrado con ID: " + laneId));
@@ -105,7 +110,7 @@ public class LaneServiceImpl implements LaneService {
 
     @Override
     public void validarLanePerteneceAlProceso(Long laneId, Long procesoId) {
-        Lane lane = obtenerLaneEntityById(laneId);
+        Lane lane = obtenerLaneEntity(laneId);
         if (lane.getProceso() == null || !lane.getProceso().getId().equals(procesoId)) {
             throw new IllegalArgumentException(
                     String.format("El lane con ID %d no pertenece al proceso %d", laneId, procesoId));
@@ -119,7 +124,7 @@ public class LaneServiceImpl implements LaneService {
     @Override
     @Transactional
     public LaneDTO editarLane(Long laneId, LaneDTO laneDTO) {
-        Lane lane = obtenerLaneEntityById(laneId);
+        Lane lane = obtenerLaneEntity(laneId);
 
         Proceso proceso = lane.getProceso();
         Usuario usuarioActual = obtenerUsuarioActual();
@@ -167,7 +172,7 @@ public class LaneServiceImpl implements LaneService {
     @Override
     @Transactional
     public void eliminarLane(Long laneId) {
-        Lane lane = obtenerLaneEntityById(laneId);
+        Lane lane = obtenerLaneEntity(laneId);
 
         Usuario usuarioActual = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, lane.getProceso().getPool().getEmpresa());

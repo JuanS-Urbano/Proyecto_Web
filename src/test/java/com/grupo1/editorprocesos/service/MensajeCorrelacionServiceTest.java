@@ -4,7 +4,6 @@ import com.grupo1.editorprocesos.dto.CorrelacionResultDTO;
 import com.grupo1.editorprocesos.dto.MensajeDTO;
 import com.grupo1.editorprocesos.exception.ResourceNotFoundException;
 import com.grupo1.editorprocesos.model.entity.core.Empresa;
-import com.grupo1.editorprocesos.model.entity.core.Usuario;
 import com.grupo1.editorprocesos.model.entity.message.Mensaje;
 import com.grupo1.editorprocesos.model.entity.process.Proceso;
 import com.grupo1.editorprocesos.model.entity.core.Pool;
@@ -30,7 +29,6 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)

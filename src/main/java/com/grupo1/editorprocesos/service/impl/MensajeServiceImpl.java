@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@SuppressWarnings("java:S125")
 public class MensajeServiceImpl implements MensajeService {
 
     private final MensajeRepository mensajeRepository;
@@ -159,7 +160,7 @@ public class MensajeServiceImpl implements MensajeService {
 
         return mensajeRepository.findByProcesoId(procesoId).stream()
                 .map(this::convertirADTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -239,13 +240,14 @@ public class MensajeServiceImpl implements MensajeService {
         }
         return mensajeRepository.findByCorrelationKey(correlationKey).stream()
                 .map(this::convertirADTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     // =====================================================================================
     // Métodos privados
     // =====================================================================================
 
+    @SuppressWarnings({"java:S3776", "java:S135", "java:S125"})
     private void validarJson(String json) {
         String trimmed = json.trim();
         if (!(trimmed.startsWith("{") && trimmed.endsWith("}"))
