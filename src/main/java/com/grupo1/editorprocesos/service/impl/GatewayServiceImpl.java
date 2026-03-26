@@ -16,6 +16,7 @@ import com.grupo1.editorprocesos.repository.HistorialCambiosRepository;
 import com.grupo1.editorprocesos.repository.ProcesoRepository;
 import com.grupo1.editorprocesos.repository.UsuarioRepository;
 import com.grupo1.editorprocesos.service.GatewayService;
+import com.grupo1.editorprocesos.service.PermisosPoolService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,11 +24,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
+@SuppressWarnings({"java:S6204", "java:S1192"})
 @Service
 @RequiredArgsConstructor
 public class GatewayServiceImpl implements GatewayService {
+
+    private static final String GATEWAY_NO_ENCONTRADO = "No se encontro el gateway con ID: ";
 
     private final GatewayRepository gatewayRepository;
     private final ProcesoRepository procesoRepository;
@@ -35,6 +38,7 @@ public class GatewayServiceImpl implements GatewayService {
     private final HistorialCambiosRepository historialCambiosRepository;
     private final ArcoRepository arcoRepository;
     private final HttpServletRequest httpServletRequest;
+    private final PermisosPoolService permisosPoolService;
 
     // =====================================================================================
     // HU-15: Crear Gateway
@@ -51,6 +55,7 @@ public class GatewayServiceImpl implements GatewayService {
         // 2. Validar usuario y empresa
         Usuario usuarioActual = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, proceso.getPool().getEmpresa());
+        permisosPoolService.validarPermisoEscritura(usuarioActual);
 
         // 3. Validar tipo de gateway
         if (gatewayDTO.getTipoGateway() == null) {
@@ -92,12 +97,13 @@ public class GatewayServiceImpl implements GatewayService {
         // 1. Buscar gateway existente
         Gateway gateway = gatewayRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Gateway no encontrado con ID: " + id));
+                        GATEWAY_NO_ENCONTRADO + id));
 
         // 2. Validar usuario y empresa
         Proceso proceso = gateway.getProceso();
         Usuario usuarioActual = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, proceso.getPool().getEmpresa());
+        permisosPoolService.validarPermisoEscritura(usuarioActual);
 
         // 3. Rastrear cambios
         StringBuilder cambios = new StringBuilder("Gateway editado (ID: " + id + "): ");
@@ -156,7 +162,7 @@ public class GatewayServiceImpl implements GatewayService {
     public GatewayDTO obtenerGatewayPorId(Long id) {
         Gateway gateway = gatewayRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Gateway no encontrado con ID: " + id));
+                        GATEWAY_NO_ENCONTRADO + id));
         return convertirADTO(gateway);
     }
 
@@ -172,7 +178,7 @@ public class GatewayServiceImpl implements GatewayService {
 
         return gatewayRepository.findByProcesoId(procesoId).stream()
                 .map(this::convertirADTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     // =====================================================================================
@@ -185,7 +191,7 @@ public class GatewayServiceImpl implements GatewayService {
         // 1. Validar existencia del gateway
         Gateway gateway = gatewayRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Gateway no encontrado con ID: " + id));
+                        GATEWAY_NO_ENCONTRADO + id));
 
         // 2. Validar usuario y empresa
         Proceso proceso = gateway.getProceso();

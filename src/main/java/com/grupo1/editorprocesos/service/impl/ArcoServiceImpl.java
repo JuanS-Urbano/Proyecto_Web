@@ -19,6 +19,7 @@ import com.grupo1.editorprocesos.repository.HistorialCambiosRepository;
 import com.grupo1.editorprocesos.repository.ProcesoRepository;
 import com.grupo1.editorprocesos.repository.UsuarioRepository;
 import com.grupo1.editorprocesos.service.ArcoService;
+import com.grupo1.editorprocesos.service.PermisosPoolService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,11 +27,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
+@SuppressWarnings({"java:S6204", "java:S1192"})
 @Service
 @RequiredArgsConstructor
 public class ArcoServiceImpl implements ArcoService {
+
+    private static final String ARCO_NO_ENCONTRADO = "No se encontro el arco con ID: ";
 
     private final ArcoRepository arcoRepository;
     private final ProcesoRepository procesoRepository;
@@ -39,6 +42,7 @@ public class ArcoServiceImpl implements ArcoService {
     private final ActividadRepository actividadRepository;
     private final GatewayRepository gatewayRepository;
     private final HttpServletRequest httpServletRequest;
+    private final PermisosPoolService permisosPoolService;
 
     // =====================================================================================
     // HU-11: Crear Arco
@@ -56,6 +60,7 @@ public class ArcoServiceImpl implements ArcoService {
         Usuario usuarioActual = obtenerUsuarioActual();
         Empresa empresa = proceso.getPool().getEmpresa();
         validarUsuarioPertenecAEmpresa(usuarioActual, empresa);
+        permisosPoolService.validarPermisoEscritura(usuarioActual);
 
         // 3. Validar que los elementos origen y destino existan dentro del mismo proceso
         validarElementoExisteEnProceso(arcoDTO.getOrigenId(), proceso.getId());
@@ -98,12 +103,13 @@ public class ArcoServiceImpl implements ArcoService {
         // 1. Buscar arco existente
         Arco arco = arcoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Arco no encontrado con ID: " + id));
+                        ARCO_NO_ENCONTRADO + id));
 
         // 2. Validar pertenencia a empresa
         Proceso proceso = arco.getProceso();
         Usuario usuarioActual = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, proceso.getPool().getEmpresa());
+        permisosPoolService.validarPermisoEscritura(usuarioActual);
 
         // 3. Rastrear cambios
         StringBuilder cambios = new StringBuilder("Arco editado (ID: " + id + "): ");
@@ -157,7 +163,7 @@ public class ArcoServiceImpl implements ArcoService {
     public ArcoDTO obtenerArcoPorId(Long id) {
         Arco arco = arcoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Arco no encontrado con ID: " + id));
+                        ARCO_NO_ENCONTRADO + id));
         return convertirADTO(arco);
     }
 
@@ -173,7 +179,7 @@ public class ArcoServiceImpl implements ArcoService {
 
         return arcoRepository.findByProcesoId(procesoId).stream()
                 .map(this::convertirADTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -181,7 +187,7 @@ public class ArcoServiceImpl implements ArcoService {
     public void eliminarArco(Long id) {
         Arco arco = arcoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Arco no encontrado con ID: " + id));
+                        ARCO_NO_ENCONTRADO + id));
 
         Proceso proceso = arco.getProceso();
         Usuario usuarioActual = obtenerUsuarioActual();

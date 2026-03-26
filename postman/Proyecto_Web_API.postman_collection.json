@@ -1,0 +1,267 @@
+{
+  "info": {
+    "_postman_id": "e3d34c23-31f2-47d6-a946-d57d4bdc53a1",
+    "name": "Proyecto Web API",
+    "description": "Coleccion base para validar endpoints del proyecto con tests automatizados.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "GET Health",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response time is below 2000ms', function () {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});",
+                  "",
+                  "pm.test('Health status is UP', function () {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.status).to.eql('UP');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/actuator/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "actuator",
+                "health"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Empresas",
+      "item": [
+        {
+          "name": "GET Listar Empresas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response time is below 3000ms', function () {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(3000);",
+                  "});",
+                  "",
+                  "pm.test('ApiResponse success true', function () {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.expect(jsonData).to.have.property('success');",
+                  "  pm.expect(jsonData.success).to.eql(true);",
+                  "});",
+                  "",
+                  "pm.test('ApiResponse has data array', function () {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.expect(jsonData).to.have.property('data');",
+                  "  pm.expect(jsonData.data).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/empresas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "empresas"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Procesos",
+      "item": [
+        {
+          "name": "GET Proceso por ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200 or 404', function () {",
+                  "  pm.expect([200, 404]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "pm.test('Response time is below 4000ms', function () {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(4000);",
+                  "});",
+                  "",
+                  "pm.test('Response shape matches status', function () {",
+                  "  var jsonData = pm.response.json();",
+                  "  if (pm.response.code === 200) {",
+                  "    pm.expect(jsonData).to.have.property('success');",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "  } else {",
+                  "    pm.expect(jsonData).to.have.property('error');",
+                  "    pm.expect(jsonData.error).to.match(/Not Found|No encontrado/i);",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/procesos/{{procesoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "procesos",
+                "{{procesoId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Notificaciones",
+      "item": [
+        {
+          "name": "POST Enviar Email",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has enviado field', function () {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.expect(jsonData).to.have.property('data');",
+                  "  pm.expect(jsonData.data).to.have.property('enviado');",
+                  "});",
+                  "",
+                  "pm.test('Response time is below 3000ms', function () {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(3000);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/notificaciones/email?destino=test@correo.com&asunto=Prueba&cuerpo=Hola",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "notificaciones",
+                "email"
+              ],
+              "query": [
+                {
+                  "key": "destino",
+                  "value": "test@correo.com"
+                },
+                {
+                  "key": "asunto",
+                  "value": "Prueba"
+                },
+                {
+                  "key": "cuerpo",
+                  "value": "Hola"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "if (!pm.environment.get('baseUrl')) {",
+          "  pm.environment.set('baseUrl', 'http://localhost:8080');",
+          "}"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "procesoId",
+      "value": "1"
+    }
+  ]
+}

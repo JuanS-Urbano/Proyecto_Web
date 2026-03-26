@@ -9,6 +9,7 @@ import com.grupo1.editorprocesos.model.entity.core.Usuario;
 import com.grupo1.editorprocesos.model.enums.RolSistema;
 import com.grupo1.editorprocesos.repository.EmpresaRepository;
 import com.grupo1.editorprocesos.repository.PoolRepository;
+import com.grupo1.editorprocesos.repository.ProcesoRepository;
 import com.grupo1.editorprocesos.repository.UsuarioRepository;
 import com.grupo1.editorprocesos.service.PoolService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,13 +19,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class PoolServiceImpl implements PoolService {
 
     private final PoolRepository poolRepository;
+    private final ProcesoRepository procesoRepository;
     private final EmpresaRepository empresaRepository;
     private final UsuarioRepository usuarioRepository;
     private final ModelMapper modelMapper;
@@ -59,12 +60,12 @@ public class PoolServiceImpl implements PoolService {
     @Override
     @Transactional(readOnly = true)
     public List<PoolDTO> listarPoolsPorEmpresa(Long empresaId) {
-        empresaRepository.findById(empresaId)
+        Empresa empresa = empresaRepository.findById(empresaId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Empresa no encontrada con id: " + empresaId));
 
         Usuario usuario = obtenerUsuarioActual();
-        validarUsuarioPertenecAEmpresa(usuario, empresaRepository.findById(empresaId).get());
+        validarUsuarioPertenecAEmpresa(usuario, empresa);
 
         return poolRepository.findByEmpresaId(empresaId).stream()
                 .map(pool -> {
@@ -72,7 +73,7 @@ public class PoolServiceImpl implements PoolService {
                     dto.setEmpresaId(empresaId);
                     return dto;
                 })
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -98,6 +99,29 @@ public class PoolServiceImpl implements PoolService {
         PoolDTO resultado = modelMapper.map(actualizado, PoolDTO.class);
         resultado.setEmpresaId(actualizado.getEmpresa().getId());
         return resultado;
+    }
+
+    @Override
+    @Transactional
+    public void eliminarPool(Long id) {
+        Pool pool = poolRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Pool no encontrado con id: " + id));
+
+        Usuario usuario = obtenerUsuarioActual();
+        validarUsuarioPertenecAEmpresa(usuario, pool.getEmpresa());
+        if (usuario.getRolSistema() != RolSistema.ADMIN_EMPRESA
+                && usuario.getRolSistema() != RolSistema.ADMIN_PLATAFORMA) {
+            throw new UnauthorizedException("Solo administradores pueden eliminar pools");
+        }
+
+        // Verificar que no haya procesos activos en el pool
+        if (!procesoRepository.findByPoolId(id).isEmpty()) {
+            throw new IllegalStateException(
+                    "No se puede eliminar el pool porque tiene procesos asignados");
+        }
+
+        poolRepository.delete(pool);
     }
 
     // ===== Métodos privados de utilidad =====

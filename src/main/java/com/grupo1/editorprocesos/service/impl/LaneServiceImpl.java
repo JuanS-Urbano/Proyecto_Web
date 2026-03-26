@@ -14,14 +14,15 @@ import com.grupo1.editorprocesos.repository.ProcesoRepository;
 import com.grupo1.editorprocesos.repository.RolProcesoRepository;
 import com.grupo1.editorprocesos.repository.UsuarioRepository;
 import com.grupo1.editorprocesos.service.LaneService;
+import com.grupo1.editorprocesos.service.PermisosPoolService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
+@SuppressWarnings({"java:S6809", "java:S6204"})
 @Service
 @RequiredArgsConstructor
 public class LaneServiceImpl implements LaneService {
@@ -32,6 +33,7 @@ public class LaneServiceImpl implements LaneService {
     private final UsuarioRepository usuarioRepository;
     private final ActividadRepository actividadRepository;
     private final HttpServletRequest httpServletRequest;
+    private final PermisosPoolService permisosPoolService;
 
     @Override
     @Transactional
@@ -42,6 +44,7 @@ public class LaneServiceImpl implements LaneService {
 
         Usuario usuarioActual = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, proceso.getPool().getEmpresa());
+        permisosPoolService.validarPermisoEscritura(usuarioActual);
 
         if (laneDTO.getNombre() == null || laneDTO.getNombre().isBlank()) {
             throw new IllegalArgumentException("El nombre del lane es requerido");
@@ -85,28 +88,29 @@ public class LaneServiceImpl implements LaneService {
 
         return laneRepository.findByProcesoId(procesoId).stream()
                 .map(this::convertirADTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
-    @Transactional(readOnly = true)
     public LaneDTO obtenerLanePorId(Long laneId) {
-        Lane lane = obtenerLaneEntityById(laneId);
+        Lane lane = obtenerLaneEntity(laneId);
         return convertirADTO(lane);
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Lane obtenerLaneEntityById(Long laneId) {
+        return obtenerLaneEntity(laneId);
+    }
+
+    private Lane obtenerLaneEntity(Long laneId) {
         return laneRepository.findById(laneId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Lane no encontrado con ID: " + laneId));
     }
 
     @Override
-    @Transactional(readOnly = true)
     public void validarLanePerteneceAlProceso(Long laneId, Long procesoId) {
-        Lane lane = obtenerLaneEntityById(laneId);
+        Lane lane = obtenerLaneEntity(laneId);
         if (lane.getProceso() == null || !lane.getProceso().getId().equals(procesoId)) {
             throw new IllegalArgumentException(
                     String.format("El lane con ID %d no pertenece al proceso %d", laneId, procesoId));
@@ -120,11 +124,12 @@ public class LaneServiceImpl implements LaneService {
     @Override
     @Transactional
     public LaneDTO editarLane(Long laneId, LaneDTO laneDTO) {
-        Lane lane = obtenerLaneEntityById(laneId);
+        Lane lane = obtenerLaneEntity(laneId);
 
         Proceso proceso = lane.getProceso();
         Usuario usuarioActual = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, proceso.getPool().getEmpresa());
+        permisosPoolService.validarPermisoEscritura(usuarioActual);
 
         if (laneDTO.getNombre() != null && !laneDTO.getNombre().isBlank()) {
             lane.setNombre(laneDTO.getNombre());
@@ -167,10 +172,11 @@ public class LaneServiceImpl implements LaneService {
     @Override
     @Transactional
     public void eliminarLane(Long laneId) {
-        Lane lane = obtenerLaneEntityById(laneId);
+        Lane lane = obtenerLaneEntity(laneId);
 
         Usuario usuarioActual = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, lane.getProceso().getPool().getEmpresa());
+        permisosPoolService.validarPermisoEscritura(usuarioActual);
 
         // Validar que no tenga actividades asignadas
         var actividadesEnLane = actividadRepository.findByLaneId(laneId);

@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -83,7 +82,7 @@ public class RolProcesoServiceImpl implements RolProcesoService {
         return rolProcesoRepository.findByEmpresaId(empresaId)
                 .stream()
                 .map(this::toDTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override

@@ -10,12 +10,14 @@ import com.grupo1.editorprocesos.model.entity.core.Usuario;
 import com.grupo1.editorprocesos.model.entity.process.HistorialCambios;
 import com.grupo1.editorprocesos.model.entity.process.Proceso;
 import com.grupo1.editorprocesos.model.enums.EstadoProceso;
+import com.grupo1.editorprocesos.model.enums.RolSistema;
 import com.grupo1.editorprocesos.repository.EmpresaRepository;
 import com.grupo1.editorprocesos.repository.HistorialCambiosRepository;
 import com.grupo1.editorprocesos.repository.PoolRepository;
 import com.grupo1.editorprocesos.repository.ProcesoRepository;
 import com.grupo1.editorprocesos.repository.UsuarioRepository;
 import com.grupo1.editorprocesos.service.ProcesoService;
+import com.grupo1.editorprocesos.service.PermisosPoolService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -23,12 +25,18 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ProcesoServiceImpl implements ProcesoService {
+
+    private static final String POOL_NO_ENCONTRADO = "Pool no encontrado con ID: ";
+    private static final String PROCESO_NO_ENCONTRADO = "Proceso no encontrado con ID: ";
 
     private final ProcesoRepository procesoRepository;
     private final PoolRepository poolRepository;
@@ -37,6 +45,7 @@ public class ProcesoServiceImpl implements ProcesoService {
     private final HistorialCambiosRepository historialCambiosRepository;
     private final ModelMapper modelMapper;
     private final HttpServletRequest httpServletRequest;
+    private final PermisosPoolService permisosPoolService;
 
     @Override
     @Transactional
@@ -47,7 +56,7 @@ public class ProcesoServiceImpl implements ProcesoService {
 
         Pool pool = poolRepository.findById(procesoDTO.getPoolId())
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Pool no encontrado con ID: " + procesoDTO.getPoolId()));
+                        POOL_NO_ENCONTRADO + procesoDTO.getPoolId()));
 
         Empresa empresa = pool.getEmpresa();
         if (empresa == null) {
@@ -57,6 +66,7 @@ public class ProcesoServiceImpl implements ProcesoService {
 
         Usuario usuarioActual = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, empresa);
+        permisosPoolService.validarPermisoEscritura(usuarioActual);
 
         Proceso proceso = new Proceso();
         proceso.setNombre(procesoDTO.getNombre());
@@ -64,7 +74,7 @@ public class ProcesoServiceImpl implements ProcesoService {
         proceso.setCategoria(procesoDTO.getCategoria());
         proceso.setEstado(EstadoProceso.BORRADOR);
         Boolean compartido = procesoDTO.getConfiguracionCompartido();
-        proceso.setConfiguracionCompartido(compartido != null ? compartido : false);
+        proceso.setConfiguracionCompartido(Boolean.TRUE.equals(compartido));
         proceso.setPool(pool);
 
         Proceso procesoGuardado = procesoRepository.save(proceso);
@@ -81,7 +91,7 @@ public class ProcesoServiceImpl implements ProcesoService {
     public ProcesoDTO obtenerProcesoById(Long id) {
         Proceso proceso = procesoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Proceso no encontrado con ID: " + id));
+                        PROCESO_NO_ENCONTRADO + id));
         return convertirADTO(proceso);
     }
 
@@ -94,10 +104,11 @@ public class ProcesoServiceImpl implements ProcesoService {
 
         Usuario usuarioActual = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, empresa);
+        boolean incluirCompartidos = puedeVerProcesosCompartidos(usuarioActual);
 
-        return procesoRepository.findByPoolEmpresaId(empresaId).stream()
+        return procesoRepository.buscarVisiblesPorEmpresa(empresaId, incluirCompartidos).stream()
                 .map(this::convertirADTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -105,14 +116,15 @@ public class ProcesoServiceImpl implements ProcesoService {
     public List<ProcesoDTO> listarProcesosPorPool(Long poolId) {
         Pool pool = poolRepository.findById(poolId)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Pool no encontrado con ID: " + poolId));
+                        POOL_NO_ENCONTRADO + poolId));
 
         Usuario usuarioActual = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, pool.getEmpresa());
+        boolean incluirCompartidos = puedeVerProcesosCompartidos(usuarioActual);
 
-        return procesoRepository.findByPoolId(poolId).stream()
+        return procesoRepository.buscarVisiblesPorPool(poolId, incluirCompartidos).stream()
                 .map(this::convertirADTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -120,14 +132,15 @@ public class ProcesoServiceImpl implements ProcesoService {
     public List<ProcesoDTO> listarProcesosPorPoolYEstado(Long poolId, EstadoProceso estado) {
         Pool pool = poolRepository.findById(poolId)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Pool no encontrado con ID: " + poolId));
+                        POOL_NO_ENCONTRADO + poolId));
 
         Usuario usuarioActual = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, pool.getEmpresa());
+        boolean incluirCompartidos = puedeVerProcesosCompartidos(usuarioActual);
 
-        return procesoRepository.findByPoolIdAndEstado(poolId, estado).stream()
+        return procesoRepository.buscarVisiblesPorPoolConFiltros(poolId, estado, null, incluirCompartidos).stream()
                 .map(this::convertirADTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -135,14 +148,15 @@ public class ProcesoServiceImpl implements ProcesoService {
     public List<ProcesoDTO> listarProcesosPorPoolYCategoria(Long poolId, String categoria) {
         Pool pool = poolRepository.findById(poolId)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Pool no encontrado con ID: " + poolId));
+                        POOL_NO_ENCONTRADO + poolId));
 
         Usuario usuarioActual = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, pool.getEmpresa());
+        boolean incluirCompartidos = puedeVerProcesosCompartidos(usuarioActual);
 
-        return procesoRepository.findByPoolIdAndCategoria(poolId, categoria).stream()
+        return procesoRepository.buscarVisiblesPorPoolConFiltros(poolId, null, categoria, incluirCompartidos).stream()
                 .map(this::convertirADTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -150,26 +164,22 @@ public class ProcesoServiceImpl implements ProcesoService {
     public List<ProcesoDTO> listarProcesosPorPoolConFiltros(Long poolId, EstadoProceso estado, String categoria) {
         Pool pool = poolRepository.findById(poolId)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Pool no encontrado con ID: " + poolId));
+                        POOL_NO_ENCONTRADO + poolId));
 
         Usuario usuarioActual = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, pool.getEmpresa());
+        boolean incluirCompartidos = puedeVerProcesosCompartidos(usuarioActual);
 
-        List<Proceso> procesos;
-
-        if (estado != null && categoria != null) {
-            procesos = procesoRepository.findByPoolIdAndEstadoAndCategoria(poolId, estado, categoria);
-        } else if (estado != null) {
-            procesos = procesoRepository.findByPoolIdAndEstado(poolId, estado);
-        } else if (categoria != null) {
-            procesos = procesoRepository.findByPoolIdAndCategoria(poolId, categoria);
-        } else {
-            procesos = procesoRepository.findByPoolId(poolId);
-        }
+        List<Proceso> procesos = procesoRepository.buscarVisiblesPorPoolConFiltros(
+                poolId,
+                estado,
+                categoria,
+                incluirCompartidos
+        );
 
         return procesos.stream()
                 .map(this::convertirADTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -177,14 +187,15 @@ public class ProcesoServiceImpl implements ProcesoService {
     public List<ProcesoDTO> buscarProcesosPorNombre(Long poolId, String nombre) {
         Pool pool = poolRepository.findById(poolId)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Pool no encontrado con ID: " + poolId));
+                        POOL_NO_ENCONTRADO + poolId));
 
         Usuario usuarioActual = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, pool.getEmpresa());
+        boolean incluirCompartidos = puedeVerProcesosCompartidos(usuarioActual);
 
-        return procesoRepository.findByPoolIdAndNombreContainingIgnoreCase(poolId, nombre).stream()
+        return procesoRepository.buscarVisiblesPorPoolYNombre(poolId, nombre, incluirCompartidos).stream()
                 .map(this::convertirADTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -192,7 +203,7 @@ public class ProcesoServiceImpl implements ProcesoService {
     public ProcesoDTO editarProceso(Long id, ProcesoDTO procesoDTO) {
         Proceso proceso = procesoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Proceso no encontrado con ID: " + id));
+                        PROCESO_NO_ENCONTRADO + id));
 
         Usuario usuarioActual = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, proceso.getPool().getEmpresa());
@@ -250,7 +261,7 @@ public class ProcesoServiceImpl implements ProcesoService {
     public void eliminarProceso(Long id) {
         Proceso proceso = procesoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Proceso no encontrado con ID: " + id));
+                        PROCESO_NO_ENCONTRADO + id));
 
         Usuario usuarioActual = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, proceso.getPool().getEmpresa());
@@ -271,14 +282,14 @@ public class ProcesoServiceImpl implements ProcesoService {
     public List<HistorialCambiosDTO> obtenerHistorialProceso(Long procesoId) {
         Proceso proceso = procesoRepository.findById(procesoId)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Proceso no encontrado con ID: " + procesoId));
+                        PROCESO_NO_ENCONTRADO + procesoId));
 
         Usuario usuarioActual = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, proceso.getPool().getEmpresa());
 
         return historialCambiosRepository.findByProcesoId(procesoId).stream()
                 .map(h -> modelMapper.map(h, HistorialCambiosDTO.class))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     // ===== Métodos privados de utilidad =====
@@ -314,5 +325,32 @@ public class ProcesoServiceImpl implements ProcesoService {
             throw new UnauthorizedException(
                     "El usuario no tiene acceso a la empresa con ID: " + empresa.getId());
         }
+    }
+
+    /**
+     * Soporta integración con Dev 6/Auth:
+     * - ADMIN_PLATAFORMA tiene acceso global a compartidos.
+     * - Header opcional X-User-Permissions habilita lectura de compartidos.
+     */
+    private boolean puedeVerProcesosCompartidos(Usuario usuarioActual) {
+        if (usuarioActual.getRolSistema() == RolSistema.ADMIN_PLATAFORMA) {
+            return true;
+        }
+
+        String permisosHeader = httpServletRequest.getHeader("X-User-Permissions");
+        if (permisosHeader == null || permisosHeader.isBlank()) {
+            return false;
+        }
+
+        Set<String> permisos = Arrays.stream(permisosHeader.split(","))
+                .map(String::trim)
+                .filter(p -> !p.isBlank())
+                .map(p -> p.toUpperCase(Locale.ROOT))
+                .collect(Collectors.toSet());
+
+        return permisos.contains("PROCESO_COMPARTIDO_VER")
+                || permisos.contains("PROCESOS_COMPARTIDOS_VER")
+                || permisos.contains("SHARED_PROCESS_READ")
+                || permisos.contains("POOL_SHARED_READ");
     }
 }
