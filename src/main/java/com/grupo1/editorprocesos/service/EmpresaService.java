@@ -9,4 +9,9 @@ public interface EmpresaService {
     List<EmpresaDTO> listarEmpresas();
 
     EmpresaDTO obtenerEmpresaPorId(Long id);
+
+    /**
+     * Devuelve la entidad Empresa. Método interno para ser usado por otros servicios.
+     */
+    com.grupo1.editorprocesos.model.entity.core.Empresa obtenerEntityById(Long id);
 }

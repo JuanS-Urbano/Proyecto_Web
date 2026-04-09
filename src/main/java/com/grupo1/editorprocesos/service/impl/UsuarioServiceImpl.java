@@ -55,7 +55,7 @@ public class UsuarioServiceImpl implements UsuarioService {
 
         // 7. Devolver DTO de salida
         UsuarioDTO salida = modelMapper.map(guardado, UsuarioDTO.class);
-        salida.setEmpresaId(empresa.getId());
+        salida.setEmpresa(new com.grupo1.editorprocesos.dto.ReferenciaDTO(empresa.getId(), empresa.getNombre()));
         return salida;
     }
 
@@ -75,5 +75,34 @@ public class UsuarioServiceImpl implements UsuarioService {
         admin.setIsActivo(true);
 
         usuarioRepository.save(admin);
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public java.util.List<UsuarioDTO> listarUsuariosPorEmpresa(Long empresaId) {
+        if (!empresaRepository.existsById(empresaId)) {
+            throw new ResourceNotFoundException("Empresa no encontrada con id: " + empresaId);
+        }
+        return usuarioRepository.findByEmpresaId(empresaId).stream()
+                .map(usuario -> {
+                    UsuarioDTO dto = modelMapper.map(usuario, UsuarioDTO.class);
+                    dto.setEmpresa(new com.grupo1.editorprocesos.dto.ReferenciaDTO(usuario.getEmpresa().getId(), usuario.getEmpresa().getNombre()));
+                    return dto;
+                })
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public UsuarioDTO cambiarRol(Long usuarioId, RolSistema nuevoRol) {
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + usuarioId));
+        
+        usuario.setRolSistema(nuevoRol);
+        Usuario guardado = usuarioRepository.save(usuario);
+        
+        UsuarioDTO salida = modelMapper.map(guardado, UsuarioDTO.class);
+        salida.setEmpresa(new com.grupo1.editorprocesos.dto.ReferenciaDTO(guardado.getEmpresa().getId(), guardado.getEmpresa().getNombre()));
+        return salida;
     }
 }

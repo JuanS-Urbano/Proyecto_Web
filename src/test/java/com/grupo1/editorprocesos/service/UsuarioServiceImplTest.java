@@ -173,10 +173,69 @@ class UsuarioServiceImplTest {
 
         UsuarioDTO result = usuarioService.crearUsuario(createDTO);
 
-        assertThat(result.getEmpresaId()).isEqualTo(1L);
+        assertThat(result.getEmpresa().getId()).isEqualTo(1L);
         ArgumentCaptor<Usuario> captor = ArgumentCaptor.forClass(Usuario.class);
         verify(usuarioRepository).save(captor.capture());
         assertThat(captor.getValue().getEmpresa()).isEqualTo(empresa);
+    }
+
+    @Test
+    void listarUsuariosPorEmpresa_exitoso() {
+        Usuario usuario = new Usuario();
+        usuario.setId(20L);
+        usuario.setEmail("u@empresa.com");
+        empresa.setNombre("Empresa 1");
+        usuario.setEmpresa(empresa);
+
+        UsuarioDTO dto = new UsuarioDTO();
+        dto.setEmail("u@empresa.com");
+
+        when(empresaRepository.existsById(1L)).thenReturn(true);
+        when(usuarioRepository.findByEmpresaId(1L)).thenReturn(java.util.List.of(usuario));
+        when(modelMapper.map(usuario, UsuarioDTO.class)).thenReturn(dto);
+
+        java.util.List<UsuarioDTO> result = usuarioService.listarUsuariosPorEmpresa(1L);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getEmpresa().getId()).isEqualTo(1L);
+    }
+
+    @Test
+    void listarUsuariosPorEmpresa_empresaNoExiste() {
+        when(empresaRepository.existsById(99L)).thenReturn(false);
+
+        assertThatThrownBy(() -> usuarioService.listarUsuariosPorEmpresa(99L))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Empresa no encontrada");
+    }
+
+    @Test
+    void cambiarRol_exitoso() {
+        Usuario usuario = new Usuario();
+        usuario.setId(30L);
+        empresa.setNombre("Empresa 1");
+        usuario.setEmpresa(empresa);
+        usuario.setRolSistema(RolSistema.LECTOR);
+
+        UsuarioDTO dto = new UsuarioDTO();
+
+        when(usuarioRepository.findById(30L)).thenReturn(Optional.of(usuario));
+        when(usuarioRepository.save(usuario)).thenReturn(usuario);
+        when(modelMapper.map(usuario, UsuarioDTO.class)).thenReturn(dto);
+
+        UsuarioDTO result = usuarioService.cambiarRol(30L, RolSistema.ADMIN_EMPRESA);
+
+        assertThat(result.getEmpresa().getId()).isEqualTo(1L);
+        assertThat(usuario.getRolSistema()).isEqualTo(RolSistema.ADMIN_EMPRESA);
+    }
+
+    @Test
+    void cambiarRol_usuarioNoEncontrado() {
+        when(usuarioRepository.findById(404L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> usuarioService.cambiarRol(404L, RolSistema.ADMIN_EMPRESA))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Usuario no encontrado");
     }
 }
 

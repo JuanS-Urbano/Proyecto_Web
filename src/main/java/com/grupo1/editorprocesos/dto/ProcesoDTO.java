@@ -15,6 +15,6 @@ public class ProcesoDTO {
     private String categoria;
     private EstadoProceso estado;
     private Boolean configuracionCompartido;
-    private Long poolId;
-    private Long empresaId;
+    private ReferenciaDTO pool;
+    private ReferenciaDTO empresa;
 }

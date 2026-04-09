@@ -13,7 +13,7 @@ import com.grupo1.editorprocesos.model.entity.process.Proceso;
 import com.grupo1.editorprocesos.repository.ArcoRepository;
 import com.grupo1.editorprocesos.repository.GatewayRepository;
 import com.grupo1.editorprocesos.repository.HistorialCambiosRepository;
-import com.grupo1.editorprocesos.repository.ProcesoRepository;
+import com.grupo1.editorprocesos.service.ProcesoService;
 import com.grupo1.editorprocesos.repository.UsuarioRepository;
 import com.grupo1.editorprocesos.service.GatewayService;
 import com.grupo1.editorprocesos.service.PermisosPoolService;
@@ -33,7 +33,7 @@ public class GatewayServiceImpl implements GatewayService {
     private static final String GATEWAY_NO_ENCONTRADO = "No se encontro el gateway con ID: ";
 
     private final GatewayRepository gatewayRepository;
-    private final ProcesoRepository procesoRepository;
+    private final ProcesoService procesoService;
     private final UsuarioRepository usuarioRepository;
     private final HistorialCambiosRepository historialCambiosRepository;
     private final ArcoRepository arcoRepository;
@@ -48,9 +48,10 @@ public class GatewayServiceImpl implements GatewayService {
     @Transactional
     public GatewayDTO crearGateway(GatewayDTO gatewayDTO) {
         // 1. Validar que el proceso exista
-        Proceso proceso = procesoRepository.findById(gatewayDTO.getProcesoId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Proceso no encontrado con ID: " + gatewayDTO.getProcesoId()));
+        if (gatewayDTO.getProceso() == null || gatewayDTO.getProceso().getId() == null) {
+            throw new IllegalArgumentException("La referencia al proceso es requerida");
+        }
+        Proceso proceso = procesoService.obtenerEntityById(gatewayDTO.getProceso().getId());
 
         // 2. Validar usuario y empresa
         Usuario usuarioActual = obtenerUsuarioActual();
@@ -169,9 +170,7 @@ public class GatewayServiceImpl implements GatewayService {
     @Override
     @Transactional(readOnly = true)
     public List<GatewayDTO> listarGatewaysPorProceso(Long procesoId) {
-        Proceso proceso = procesoRepository.findById(procesoId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Proceso no encontrado con ID: " + procesoId));
+        Proceso proceso = procesoService.obtenerEntityById(procesoId);
 
         Usuario usuarioActual = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, proceso.getPool().getEmpresa());
@@ -260,7 +259,7 @@ public class GatewayServiceImpl implements GatewayService {
         dto.setTipoGateway(gateway.getTipoGateway());
         dto.setPosicionX(gateway.getPosicionX());
         dto.setPosicionY(gateway.getPosicionY());
-        dto.setProcesoId(gateway.getProceso().getId());
+        dto.setProceso(new com.grupo1.editorprocesos.dto.ReferenciaDTO(gateway.getProceso().getId(), gateway.getProceso().getNombre()));
         return dto;
     }
 

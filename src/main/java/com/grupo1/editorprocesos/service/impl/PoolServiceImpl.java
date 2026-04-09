@@ -7,7 +7,7 @@ import com.grupo1.editorprocesos.model.entity.core.Empresa;
 import com.grupo1.editorprocesos.model.entity.core.Pool;
 import com.grupo1.editorprocesos.model.entity.core.Usuario;
 import com.grupo1.editorprocesos.model.enums.RolSistema;
-import com.grupo1.editorprocesos.repository.EmpresaRepository;
+import com.grupo1.editorprocesos.service.EmpresaService;
 import com.grupo1.editorprocesos.repository.PoolRepository;
 import com.grupo1.editorprocesos.repository.ProcesoRepository;
 import com.grupo1.editorprocesos.repository.UsuarioRepository;
@@ -24,9 +24,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PoolServiceImpl implements PoolService {
 
+    private static final String POOL_NO_ENCONTRADO_CON_ID = "Pool no encontrado con id: ";
+
     private final PoolRepository poolRepository;
     private final ProcesoRepository procesoRepository;
-    private final EmpresaRepository empresaRepository;
+    private final EmpresaService empresaService;
     private final UsuarioRepository usuarioRepository;
     private final ModelMapper modelMapper;
     private final HttpServletRequest httpServletRequest;
@@ -34,9 +36,10 @@ public class PoolServiceImpl implements PoolService {
     @Override
     @Transactional
     public PoolDTO crearPool(PoolDTO poolDTO) {
-        Empresa empresa = empresaRepository.findById(poolDTO.getEmpresaId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Empresa no encontrada con id: " + poolDTO.getEmpresaId()));
+        if (poolDTO.getEmpresa() == null || poolDTO.getEmpresa().getId() == null) {
+            throw new IllegalArgumentException("La referencia a la empresa es requerida");
+        }
+        Empresa empresa = empresaService.obtenerEntityById(poolDTO.getEmpresa().getId());
 
         // Validar que el usuario actual tenga rol ADMIN_EMPRESA
         Usuario usuario = obtenerUsuarioActual();
@@ -53,16 +56,14 @@ public class PoolServiceImpl implements PoolService {
         Pool guardado = poolRepository.save(pool);
 
         PoolDTO resultado = modelMapper.map(guardado, PoolDTO.class);
-        resultado.setEmpresaId(guardado.getEmpresa().getId());
+        resultado.setEmpresa(new com.grupo1.editorprocesos.dto.ReferenciaDTO(guardado.getEmpresa().getId(), guardado.getEmpresa().getNombre()));
         return resultado;
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<PoolDTO> listarPoolsPorEmpresa(Long empresaId) {
-        Empresa empresa = empresaRepository.findById(empresaId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Empresa no encontrada con id: " + empresaId));
+        Empresa empresa = empresaService.obtenerEntityById(empresaId);
 
         Usuario usuario = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuario, empresa);
@@ -70,7 +71,7 @@ public class PoolServiceImpl implements PoolService {
         return poolRepository.findByEmpresaId(empresaId).stream()
                 .map(pool -> {
                     PoolDTO dto = modelMapper.map(pool, PoolDTO.class);
-                    dto.setEmpresaId(empresaId);
+                    dto.setEmpresa(new com.grupo1.editorprocesos.dto.ReferenciaDTO(empresa.getId(), empresa.getNombre()));
                     return dto;
                 })
                 .toList();
@@ -81,7 +82,7 @@ public class PoolServiceImpl implements PoolService {
     public PoolDTO editarPool(Long id, PoolDTO poolDTO) {
         Pool pool = poolRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Pool no encontrado con id: " + id));
+                POOL_NO_ENCONTRADO_CON_ID + id));
 
         Usuario usuario = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuario, pool.getEmpresa());
@@ -97,7 +98,7 @@ public class PoolServiceImpl implements PoolService {
         Pool actualizado = poolRepository.save(pool);
 
         PoolDTO resultado = modelMapper.map(actualizado, PoolDTO.class);
-        resultado.setEmpresaId(actualizado.getEmpresa().getId());
+        resultado.setEmpresa(new com.grupo1.editorprocesos.dto.ReferenciaDTO(actualizado.getEmpresa().getId(), actualizado.getEmpresa().getNombre()));
         return resultado;
     }
 
@@ -106,7 +107,7 @@ public class PoolServiceImpl implements PoolService {
     public void eliminarPool(Long id) {
         Pool pool = poolRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Pool no encontrado con id: " + id));
+                POOL_NO_ENCONTRADO_CON_ID + id));
 
         Usuario usuario = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuario, pool.getEmpresa());
@@ -142,5 +143,13 @@ public class PoolServiceImpl implements PoolService {
             throw new UnauthorizedException(
                     "El usuario no tiene acceso a la empresa con ID: " + empresa.getId());
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Pool obtenerEntityById(Long id) {
+        return poolRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        POOL_NO_ENCONTRADO_CON_ID + id));
     }
 }

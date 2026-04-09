@@ -10,8 +10,8 @@ import com.grupo1.editorprocesos.model.entity.process.Proceso;
 import com.grupo1.editorprocesos.model.entity.process.RolProceso;
 import com.grupo1.editorprocesos.repository.ActividadRepository;
 import com.grupo1.editorprocesos.repository.LaneRepository;
-import com.grupo1.editorprocesos.repository.ProcesoRepository;
-import com.grupo1.editorprocesos.repository.RolProcesoRepository;
+import com.grupo1.editorprocesos.service.ProcesoService;
+import com.grupo1.editorprocesos.service.RolProcesoService;
 import com.grupo1.editorprocesos.repository.UsuarioRepository;
 import com.grupo1.editorprocesos.service.LaneService;
 import com.grupo1.editorprocesos.service.PermisosPoolService;
@@ -28,8 +28,8 @@ import java.util.List;
 public class LaneServiceImpl implements LaneService {
 
     private final LaneRepository laneRepository;
-    private final ProcesoRepository procesoRepository;
-    private final RolProcesoRepository rolProcesoRepository;
+    private final ProcesoService procesoService;
+    private final RolProcesoService rolProcesoService;
     private final UsuarioRepository usuarioRepository;
     private final ActividadRepository actividadRepository;
     private final HttpServletRequest httpServletRequest;
@@ -38,9 +38,7 @@ public class LaneServiceImpl implements LaneService {
     @Override
     @Transactional
     public LaneDTO crearLane(Long procesoId, LaneDTO laneDTO) {
-        Proceso proceso = procesoRepository.findById(procesoId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Proceso no encontrado con ID: " + procesoId));
+        Proceso proceso = procesoService.obtenerEntityById(procesoId);
 
         Usuario usuarioActual = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, proceso.getPool().getEmpresa());
@@ -58,10 +56,8 @@ public class LaneServiceImpl implements LaneService {
         lane.setPosicionY(laneDTO.getPosicionY());
         lane.setProceso(proceso);
 
-        if (laneDTO.getRolProcesoId() != null) {
-            RolProceso rolProceso = rolProcesoRepository.findById(laneDTO.getRolProcesoId())
-                    .orElseThrow(() -> new ResourceNotFoundException(
-                            "RolProceso no encontrado con ID: " + laneDTO.getRolProcesoId()));
+        if (laneDTO.getRolProceso() != null && laneDTO.getRolProceso().getId() != null) {
+            RolProceso rolProceso = rolProcesoService.obtenerEntityById(laneDTO.getRolProceso().getId());
 
             Empresa empresaProceso = proceso.getPool().getEmpresa();
             if (rolProceso.getEmpresa() == null || !rolProceso.getEmpresa().getId().equals(empresaProceso.getId())) {
@@ -79,9 +75,7 @@ public class LaneServiceImpl implements LaneService {
     @Override
     @Transactional(readOnly = true)
     public List<LaneDTO> listarLanesPorProceso(Long procesoId) {
-        Proceso proceso = procesoRepository.findById(procesoId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Proceso no encontrado con ID: " + procesoId));
+        Proceso proceso = procesoService.obtenerEntityById(procesoId);
 
         Usuario usuarioActual = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, proceso.getPool().getEmpresa());
@@ -148,10 +142,8 @@ public class LaneServiceImpl implements LaneService {
         }
 
         // Cambiar RolProceso si se proporciona
-        if (laneDTO.getRolProcesoId() != null) {
-            RolProceso rolProceso = rolProcesoRepository.findById(laneDTO.getRolProcesoId())
-                    .orElseThrow(() -> new ResourceNotFoundException(
-                            "RolProceso no encontrado con ID: " + laneDTO.getRolProcesoId()));
+        if (laneDTO.getRolProceso() != null && laneDTO.getRolProceso().getId() != null) {
+            RolProceso rolProceso = rolProcesoService.obtenerEntityById(laneDTO.getRolProceso().getId());
 
             Empresa empresaProceso = proceso.getPool().getEmpresa();
             if (rolProceso.getEmpresa() == null || !rolProceso.getEmpresa().getId().equals(empresaProceso.getId())) {
@@ -198,8 +190,8 @@ public class LaneServiceImpl implements LaneService {
         dto.setOrden(lane.getOrden());
         dto.setPosicionX(lane.getPosicionX());
         dto.setPosicionY(lane.getPosicionY());
-        dto.setProcesoId(lane.getProceso() != null ? lane.getProceso().getId() : null);
-        dto.setRolProcesoId(lane.getRolProceso() != null ? lane.getRolProceso().getId() : null);
+        dto.setProceso(lane.getProceso() != null ? new com.grupo1.editorprocesos.dto.ReferenciaDTO(lane.getProceso().getId(), lane.getProceso().getNombre()) : null);
+        dto.setRolProceso(lane.getRolProceso() != null ? new com.grupo1.editorprocesos.dto.ReferenciaDTO(lane.getRolProceso().getId(), lane.getRolProceso().getNombre()) : null);
         return dto;
     }
 

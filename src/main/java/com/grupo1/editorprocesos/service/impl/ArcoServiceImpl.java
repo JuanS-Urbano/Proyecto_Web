@@ -16,7 +16,7 @@ import com.grupo1.editorprocesos.repository.ActividadRepository;
 import com.grupo1.editorprocesos.repository.ArcoRepository;
 import com.grupo1.editorprocesos.repository.GatewayRepository;
 import com.grupo1.editorprocesos.repository.HistorialCambiosRepository;
-import com.grupo1.editorprocesos.repository.ProcesoRepository;
+import com.grupo1.editorprocesos.service.ProcesoService;
 import com.grupo1.editorprocesos.repository.UsuarioRepository;
 import com.grupo1.editorprocesos.service.ArcoService;
 import com.grupo1.editorprocesos.service.PermisosPoolService;
@@ -36,7 +36,7 @@ public class ArcoServiceImpl implements ArcoService {
     private static final String ARCO_NO_ENCONTRADO = "No se encontro el arco con ID: ";
 
     private final ArcoRepository arcoRepository;
-    private final ProcesoRepository procesoRepository;
+    private final ProcesoService procesoService;
     private final UsuarioRepository usuarioRepository;
     private final HistorialCambiosRepository historialCambiosRepository;
     private final ActividadRepository actividadRepository;
@@ -52,9 +52,10 @@ public class ArcoServiceImpl implements ArcoService {
     @Transactional
     public ArcoDTO crearArco(ArcoDTO arcoDTO) {
         // 1. Validar que el proceso exista
-        Proceso proceso = procesoRepository.findById(arcoDTO.getProcesoId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Proceso no encontrado con ID: " + arcoDTO.getProcesoId()));
+        if (arcoDTO.getProceso() == null || arcoDTO.getProceso().getId() == null) {
+            throw new IllegalArgumentException("La referencia al proceso es requerida");
+        }
+        Proceso proceso = procesoService.obtenerEntityById(arcoDTO.getProceso().getId());
 
         // 2. Validar que el usuario actual pertenezca a la empresa del proceso
         Usuario usuarioActual = obtenerUsuarioActual();
@@ -170,9 +171,7 @@ public class ArcoServiceImpl implements ArcoService {
     @Override
     @Transactional(readOnly = true)
     public List<ArcoDTO> listarArcosPorProceso(Long procesoId) {
-        Proceso proceso = procesoRepository.findById(procesoId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Proceso no encontrado con ID: " + procesoId));
+        Proceso proceso = procesoService.obtenerEntityById(procesoId);
 
         Usuario usuarioActual = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, proceso.getPool().getEmpresa());
@@ -207,7 +206,7 @@ public class ArcoServiceImpl implements ArcoService {
         dto.setId(arco.getId());
         dto.setOrigenId(arco.getOrigenId());
         dto.setDestinoId(arco.getDestinoId());
-        dto.setProcesoId(arco.getProceso().getId());
+        dto.setProceso(new com.grupo1.editorprocesos.dto.ReferenciaDTO(arco.getProceso().getId(), arco.getProceso().getNombre()));
         return dto;
     }
 

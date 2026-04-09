@@ -14,7 +14,7 @@ import com.grupo1.editorprocesos.model.enums.EstadoMensaje;
 import com.grupo1.editorprocesos.model.enums.TipoMensaje;
 import com.grupo1.editorprocesos.repository.ActividadRepository;
 import com.grupo1.editorprocesos.repository.MensajeRepository;
-import com.grupo1.editorprocesos.repository.ProcesoRepository;
+import com.grupo1.editorprocesos.service.ProcesoService;
 import com.grupo1.editorprocesos.repository.UsuarioRepository;
 import com.grupo1.editorprocesos.service.MensajeService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 public class MensajeServiceImpl implements MensajeService {
 
     private final MensajeRepository mensajeRepository;
-    private final ProcesoRepository procesoRepository;
+    private final ProcesoService procesoService;
     private final ActividadRepository actividadRepository;
     private final UsuarioRepository usuarioRepository;
     private final HttpServletRequest httpServletRequest;
@@ -49,13 +49,11 @@ public class MensajeServiceImpl implements MensajeService {
         if (dto.getNombre() == null || dto.getNombre().isBlank()) {
             throw new IllegalArgumentException("El nombre del mensaje es requerido");
         }
-        if (dto.getProcesoId() == null) {
-            throw new IllegalArgumentException("El procesoId es requerido");
+        if (dto.getProceso() == null || dto.getProceso().getId() == null) {
+            throw new IllegalArgumentException("La referencia al proceso es requerida");
         }
 
-        Proceso proceso = procesoRepository.findById(dto.getProcesoId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Proceso no encontrado con ID: " + dto.getProcesoId()));
+        Proceso proceso = procesoService.obtenerEntityById(dto.getProceso().getId());
 
         Usuario usuarioActual = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, proceso.getPool().getEmpresa());
@@ -72,10 +70,10 @@ public class MensajeServiceImpl implements MensajeService {
         mensaje.setCorrelationKey(dto.getCorrelationKey());
         mensaje.setProceso(proceso);
 
-        if (dto.getActividadOrigenId() != null) {
-            Actividad actividad = actividadRepository.findById(dto.getActividadOrigenId())
+        if (dto.getActividadOrigen() != null && dto.getActividadOrigen().getId() != null) {
+            Actividad actividad = actividadRepository.findById(dto.getActividadOrigen().getId())
                     .orElseThrow(() -> new ResourceNotFoundException(
-                            "Actividad origen no encontrada con ID: " + dto.getActividadOrigenId()));
+                            "Actividad origen no encontrada con ID: " + dto.getActividadOrigen().getId()));
             if (!actividad.getProceso().getId().equals(proceso.getId())) {
                 throw new IllegalArgumentException(
                         "La actividad origen no pertenece al proceso con ID: " + proceso.getId());
@@ -97,24 +95,22 @@ public class MensajeServiceImpl implements MensajeService {
         if (dto.getNombre() == null || dto.getNombre().isBlank()) {
             throw new IllegalArgumentException("El nombre del mensaje BPMN es obligatorio");
         }
-        if (dto.getProcesoDestinoId() == null) {
-            throw new IllegalArgumentException("El ID del proceso destino es obligatorio para catchMessage");
+        if (dto.getProcesoDestino() == null || dto.getProcesoDestino().getId() == null) {
+            throw new IllegalArgumentException("La referencia al proceso destino es obligatoria para catchMessage");
         }
 
         // Verificar que el proceso destino exista
-        Proceso procesoDestino = procesoRepository.findById(dto.getProcesoDestinoId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Proceso destino no encontrado con id: " + dto.getProcesoDestinoId()));
+        Proceso procesoDestino = procesoService.obtenerEntityById(dto.getProcesoDestino().getId());
 
         // Verificar que no haya CATCH duplicado
         boolean yaExiste = mensajeRepository
                 .existsByNombreAndTipoAndProcesoDestinoId(
-                        dto.getNombre(), TipoMensaje.CATCH, dto.getProcesoDestinoId());
+                        dto.getNombre(), TipoMensaje.CATCH, dto.getProcesoDestino().getId());
 
         if (yaExiste) {
             throw new MensajeCatchException(
                     "Ya existe un mensaje CATCH con nombre '" + dto.getNombre()
-                            + "' para el proceso con id " + dto.getProcesoDestinoId());
+                            + "' para el proceso con id " + dto.getProcesoDestino().getId());
         }
 
         Mensaje mensaje = new Mensaje();
@@ -123,19 +119,17 @@ public class MensajeServiceImpl implements MensajeService {
         mensaje.setTipo(TipoMensaje.CATCH);
         mensaje.setEstado(EstadoMensaje.PENDIENTE);
         mensaje.setCorrelationKey(dto.getCorrelationKey());
-        mensaje.setProcesoDestinoId(dto.getProcesoDestinoId());
+        mensaje.setProcesoDestinoId(dto.getProcesoDestino().getId());
         // Proceso origen para el catch (si se provee)
-        if (dto.getProcesoId() != null) {
-            Proceso procesoOrigen = procesoRepository.findById(dto.getProcesoId())
-                    .orElseThrow(() -> new ResourceNotFoundException(
-                            "Proceso origen no encontrado con ID: " + dto.getProcesoId()));
+        if (dto.getProceso() != null && dto.getProceso().getId() != null) {
+            Proceso procesoOrigen = procesoService.obtenerEntityById(dto.getProceso().getId());
             mensaje.setProceso(procesoOrigen);
         } else {
             mensaje.setProceso(procesoDestino);
         }
 
         log.info("[HU-27] catchMessage → nombre='{}', procesoDestino={}",
-                dto.getNombre(), dto.getProcesoDestinoId());
+                dto.getNombre(), dto.getProcesoDestino().getId());
 
         Mensaje guardado = mensajeRepository.save(mensaje);
 
@@ -151,9 +145,7 @@ public class MensajeServiceImpl implements MensajeService {
     @Override
     @Transactional(readOnly = true)
     public List<MensajeDTO> listarMensajesPorProceso(Long procesoId) {
-        Proceso proceso = procesoRepository.findById(procesoId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Proceso no encontrado con ID: " + procesoId));
+        Proceso proceso = procesoService.obtenerEntityById(procesoId);
 
         Usuario usuarioActual = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, proceso.getPool().getEmpresa());
@@ -287,10 +279,10 @@ public class MensajeServiceImpl implements MensajeService {
         dto.setTipo(mensaje.getTipo());
         dto.setEstado(mensaje.getEstado());
         dto.setCorrelationKey(mensaje.getCorrelationKey());
-        dto.setProcesoId(mensaje.getProceso() != null ? mensaje.getProceso().getId() : null);
-        dto.setActividadOrigenId(mensaje.getActividadOrigen() != null
-                ? mensaje.getActividadOrigen().getId() : null);
-        dto.setProcesoDestinoId(mensaje.getProcesoDestinoId());
+        dto.setProceso(mensaje.getProceso() != null ? new com.grupo1.editorprocesos.dto.ReferenciaDTO(mensaje.getProceso().getId(), mensaje.getProceso().getNombre()) : null);
+        dto.setActividadOrigen(mensaje.getActividadOrigen() != null
+                ? new com.grupo1.editorprocesos.dto.ReferenciaDTO(mensaje.getActividadOrigen().getId(), mensaje.getActividadOrigen().getNombre()) : null);
+        dto.setProcesoDestino(mensaje.getProcesoDestinoId() != null ? new com.grupo1.editorprocesos.dto.ReferenciaDTO(mensaje.getProcesoDestinoId(), null) : null);
         return dto;
     }
 

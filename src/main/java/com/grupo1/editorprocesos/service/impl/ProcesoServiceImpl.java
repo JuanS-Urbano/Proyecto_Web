@@ -11,9 +11,9 @@ import com.grupo1.editorprocesos.model.entity.process.HistorialCambios;
 import com.grupo1.editorprocesos.model.entity.process.Proceso;
 import com.grupo1.editorprocesos.model.enums.EstadoProceso;
 import com.grupo1.editorprocesos.model.enums.RolSistema;
-import com.grupo1.editorprocesos.repository.EmpresaRepository;
+import com.grupo1.editorprocesos.service.EmpresaService;
 import com.grupo1.editorprocesos.repository.HistorialCambiosRepository;
-import com.grupo1.editorprocesos.repository.PoolRepository;
+import com.grupo1.editorprocesos.service.PoolService;
 import com.grupo1.editorprocesos.repository.ProcesoRepository;
 import com.grupo1.editorprocesos.repository.UsuarioRepository;
 import com.grupo1.editorprocesos.service.ProcesoService;
@@ -39,8 +39,8 @@ public class ProcesoServiceImpl implements ProcesoService {
     private static final String PROCESO_NO_ENCONTRADO = "Proceso no encontrado con ID: ";
 
     private final ProcesoRepository procesoRepository;
-    private final PoolRepository poolRepository;
-    private final EmpresaRepository empresaRepository;
+    private final PoolService poolService;
+    private final EmpresaService empresaService;
     private final UsuarioRepository usuarioRepository;
     private final HistorialCambiosRepository historialCambiosRepository;
     private final ModelMapper modelMapper;
@@ -50,18 +50,16 @@ public class ProcesoServiceImpl implements ProcesoService {
     @Override
     @Transactional
     public ProcesoDTO crearProceso(ProcesoDTO procesoDTO) {
-        if (procesoDTO.getPoolId() == null) {
-            throw new IllegalArgumentException("El poolId es requerido para crear un proceso");
+        if (procesoDTO.getPool() == null || procesoDTO.getPool().getId() == null) {
+            throw new IllegalArgumentException("El pool referenciado es requerido para crear un proceso");
         }
 
-        Pool pool = poolRepository.findById(procesoDTO.getPoolId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        POOL_NO_ENCONTRADO + procesoDTO.getPoolId()));
+        Pool pool = poolService.obtenerEntityById(procesoDTO.getPool().getId());
 
         Empresa empresa = pool.getEmpresa();
         if (empresa == null) {
             throw new ResourceNotFoundException(
-                    "Empresa no encontrada para el pool con ID: " + procesoDTO.getPoolId());
+                    "Empresa no encontrada para el pool con ID: " + procesoDTO.getPool().getId());
         }
 
         Usuario usuarioActual = obtenerUsuarioActual();
@@ -80,8 +78,8 @@ public class ProcesoServiceImpl implements ProcesoService {
         Proceso procesoGuardado = procesoRepository.save(proceso);
 
         ProcesoDTO resultadoDTO = modelMapper.map(procesoGuardado, ProcesoDTO.class);
-        resultadoDTO.setEmpresaId(empresa.getId());
-        resultadoDTO.setPoolId(pool.getId());
+        resultadoDTO.setEmpresa(new com.grupo1.editorprocesos.dto.ReferenciaDTO(empresa.getId(), empresa.getNombre()));
+        resultadoDTO.setPool(new com.grupo1.editorprocesos.dto.ReferenciaDTO(pool.getId(), pool.getNombre()));
 
         return resultadoDTO;
     }
@@ -98,9 +96,7 @@ public class ProcesoServiceImpl implements ProcesoService {
     @Override
     @Transactional(readOnly = true)
     public List<ProcesoDTO> listarProcesosPorEmpresa(Long empresaId) {
-        Empresa empresa = empresaRepository.findById(empresaId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Empresa no encontrada con ID: " + empresaId));
+        Empresa empresa = empresaService.obtenerEntityById(empresaId);
 
         Usuario usuarioActual = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, empresa);
@@ -114,9 +110,7 @@ public class ProcesoServiceImpl implements ProcesoService {
     @Override
     @Transactional(readOnly = true)
     public List<ProcesoDTO> listarProcesosPorPool(Long poolId) {
-        Pool pool = poolRepository.findById(poolId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        POOL_NO_ENCONTRADO + poolId));
+        Pool pool = poolService.obtenerEntityById(poolId);
 
         Usuario usuarioActual = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, pool.getEmpresa());
@@ -130,9 +124,7 @@ public class ProcesoServiceImpl implements ProcesoService {
     @Override
     @Transactional(readOnly = true)
     public List<ProcesoDTO> listarProcesosPorPoolYEstado(Long poolId, EstadoProceso estado) {
-        Pool pool = poolRepository.findById(poolId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        POOL_NO_ENCONTRADO + poolId));
+        Pool pool = poolService.obtenerEntityById(poolId);
 
         Usuario usuarioActual = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, pool.getEmpresa());
@@ -146,9 +138,7 @@ public class ProcesoServiceImpl implements ProcesoService {
     @Override
     @Transactional(readOnly = true)
     public List<ProcesoDTO> listarProcesosPorPoolYCategoria(Long poolId, String categoria) {
-        Pool pool = poolRepository.findById(poolId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        POOL_NO_ENCONTRADO + poolId));
+        Pool pool = poolService.obtenerEntityById(poolId);
 
         Usuario usuarioActual = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, pool.getEmpresa());
@@ -162,9 +152,7 @@ public class ProcesoServiceImpl implements ProcesoService {
     @Override
     @Transactional(readOnly = true)
     public List<ProcesoDTO> listarProcesosPorPoolConFiltros(Long poolId, EstadoProceso estado, String categoria) {
-        Pool pool = poolRepository.findById(poolId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        POOL_NO_ENCONTRADO + poolId));
+        Pool pool = poolService.obtenerEntityById(poolId);
 
         Usuario usuarioActual = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, pool.getEmpresa());
@@ -185,9 +173,7 @@ public class ProcesoServiceImpl implements ProcesoService {
     @Override
     @Transactional(readOnly = true)
     public List<ProcesoDTO> buscarProcesosPorNombre(Long poolId, String nombre) {
-        Pool pool = poolRepository.findById(poolId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        POOL_NO_ENCONTRADO + poolId));
+        Pool pool = poolService.obtenerEntityById(poolId);
 
         Usuario usuarioActual = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, pool.getEmpresa());
@@ -297,9 +283,11 @@ public class ProcesoServiceImpl implements ProcesoService {
     private ProcesoDTO convertirADTO(Proceso proceso) {
         ProcesoDTO dto = modelMapper.map(proceso, ProcesoDTO.class);
         if (proceso.getPool() != null) {
-            dto.setPoolId(proceso.getPool().getId());
+            dto.setPool(new com.grupo1.editorprocesos.dto.ReferenciaDTO(proceso.getPool().getId(), proceso.getPool().getNombre()));
             if (proceso.getPool().getEmpresa() != null) {
-                dto.setEmpresaId(proceso.getPool().getEmpresa().getId());
+                dto.setEmpresa(new com.grupo1.editorprocesos.dto.ReferenciaDTO(
+                    proceso.getPool().getEmpresa().getId(), 
+                    proceso.getPool().getEmpresa().getNombre()));
             }
         }
         return dto;
@@ -352,5 +340,13 @@ public class ProcesoServiceImpl implements ProcesoService {
                 || permisos.contains("PROCESOS_COMPARTIDOS_VER")
                 || permisos.contains("SHARED_PROCESS_READ")
                 || permisos.contains("POOL_SHARED_READ");
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Proceso obtenerEntityById(Long id) {
+        return procesoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        PROCESO_NO_ENCONTRADO + id));
     }
 }

@@ -110,13 +110,13 @@ class ActividadServiceImplTest {
         ActividadDTO dto = new ActividadDTO();
         dto.setNombre("Actividad 1");
         dto.setTipoActividad(TipoActividad.MANUAL);
-        dto.setProcesoId(proceso.getId());
-        dto.setLaneId(lane.getId());
+        dto.setProceso(new com.grupo1.editorprocesos.dto.ReferenciaDTO(proceso.getId(), null));
+        dto.setLane(new com.grupo1.editorprocesos.dto.ReferenciaDTO(lane.getId(), null));
 
         ActividadDTO result = actividadService.crearActividad(dto);
 
         assertThat(result.getId()).isEqualTo(42L);
-        assertThat(result.getLaneId()).isEqualTo(lane.getId());
+        assertThat(result.getLane().getId()).isEqualTo(lane.getId());
     }
 
     @Test
@@ -129,8 +129,8 @@ class ActividadServiceImplTest {
         ActividadDTO dto = new ActividadDTO();
         dto.setNombre("Actividad 1");
         dto.setTipoActividad(TipoActividad.MANUAL);
-        dto.setProcesoId(proceso.getId());
-        dto.setLaneId(3L);
+        dto.setProceso(new com.grupo1.editorprocesos.dto.ReferenciaDTO(proceso.getId(), null));
+        dto.setLane(new com.grupo1.editorprocesos.dto.ReferenciaDTO(3L, null));
 
         assertThatThrownBy(() -> actividadService.crearActividad(dto))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -145,7 +145,7 @@ class ActividadServiceImplTest {
         ActividadDTO dto = new ActividadDTO();
         dto.setNombre("Actividad 1");
         dto.setTipoActividad(TipoActividad.MANUAL);
-        dto.setProcesoId(proceso.getId());
+        dto.setProceso(new com.grupo1.editorprocesos.dto.ReferenciaDTO(proceso.getId(), null));
 
         assertThatThrownBy(() -> actividadService.crearActividad(dto))
                 .isInstanceOf(UnauthorizedException.class);
@@ -177,7 +177,7 @@ class ActividadServiceImplTest {
         dto.setTipoActividad(TipoActividad.USUARIO);
         dto.setPosicionX(200.0);
         dto.setPosicionY(200.0);
-        dto.setLaneId(2L);
+        dto.setLane(new com.grupo1.editorprocesos.dto.ReferenciaDTO(2L, null));
 
         // Act
         ActividadDTO result = actividadService.editarActividad(1L, dto);
@@ -187,7 +187,7 @@ class ActividadServiceImplTest {
         assertThat(result.getTipoActividad()).isEqualTo(TipoActividad.USUARIO);
         assertThat(result.getPosicionX()).isEqualTo(200.0);
         assertThat(result.getPosicionY()).isEqualTo(200.0);
-        assertThat(result.getLaneId()).isEqualTo(2L);
+        assertThat(result.getLane().getId()).isEqualTo(2L);
     }
 
     @Test
@@ -282,13 +282,13 @@ class ActividadServiceImplTest {
         ActividadDTO dto = new ActividadDTO();
         dto.setNombre("Actividad Sin Lane");
         dto.setTipoActividad(TipoActividad.MANUAL);
-        dto.setProcesoId(proceso.getId());
-        dto.setLaneId(null);
+        dto.setProceso(new com.grupo1.editorprocesos.dto.ReferenciaDTO(proceso.getId(), null));
+        dto.setLane(new com.grupo1.editorprocesos.dto.ReferenciaDTO(null, null));
 
         ActividadDTO result = actividadService.crearActividad(dto);
 
         assertThat(result.getId()).isEqualTo(43L);
-        assertThat(result.getLaneId()).isNull();
+        assertThat(result.getLane()).isNull();
     }
 
     @Test
@@ -297,7 +297,7 @@ class ActividadServiceImplTest {
 
         ActividadDTO dto = new ActividadDTO();
         dto.setNombre("Actividad 1");
-        dto.setProcesoId(999L);
+        dto.setProceso(new com.grupo1.editorprocesos.dto.ReferenciaDTO(999L, null));
 
         assertThatThrownBy(() -> actividadService.crearActividad(dto))
                 .isInstanceOf(com.grupo1.editorprocesos.exception.ResourceNotFoundException.class);
@@ -310,7 +310,7 @@ class ActividadServiceImplTest {
         ActividadDTO dto = new ActividadDTO();
         dto.setNombre("Actividad 1");
         dto.setTipoActividad(null);
-        dto.setProcesoId(proceso.getId());
+        dto.setProceso(new com.grupo1.editorprocesos.dto.ReferenciaDTO(proceso.getId(), null));
 
         assertThatThrownBy(() -> actividadService.crearActividad(dto))
                 .isInstanceOf(IllegalArgumentException.class);
@@ -344,7 +344,7 @@ class ActividadServiceImplTest {
         dto.setTipoActividad(TipoActividad.MANUAL);
         dto.setPosicionX(10.0);
         dto.setPosicionY(10.0);
-        dto.setLaneId(null);
+        dto.setLane(new com.grupo1.editorprocesos.dto.ReferenciaDTO(null, null));
 
         ActividadDTO result = actividadService.editarActividad(1L, dto);
 
@@ -387,7 +387,7 @@ class ActividadServiceImplTest {
         when(procesoRepository.findById(proceso.getId())).thenReturn(Optional.of(proceso));
 
         ActividadDTO dto = new ActividadDTO();
-        dto.setProcesoId(proceso.getId());
+        dto.setProceso(new com.grupo1.editorprocesos.dto.ReferenciaDTO(proceso.getId(), null));
 
         assertThatThrownBy(() -> actividadService.crearActividad(dto))
                 .isInstanceOf(UnauthorizedException.class);

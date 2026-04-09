@@ -12,4 +12,9 @@ public interface PoolService {
     PoolDTO editarPool(Long id, PoolDTO poolDTO);
 
     void eliminarPool(Long id);
+
+    /**
+     * Devuelve la entidad Pool. Método interno para ser usado por otros servicios.
+     */
+    com.grupo1.editorprocesos.model.entity.core.Pool obtenerEntityById(Long id);
 }

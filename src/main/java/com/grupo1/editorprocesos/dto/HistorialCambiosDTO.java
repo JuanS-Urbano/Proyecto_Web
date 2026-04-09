@@ -11,8 +11,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class HistorialCambiosDTO {
     private Long id;
-    private Long procesoId;
-    private Long usuarioId;
+    private ReferenciaDTO proceso;
+    private ReferenciaDTO usuario;
     private LocalDateTime fecha;
     private String cambio;
 }

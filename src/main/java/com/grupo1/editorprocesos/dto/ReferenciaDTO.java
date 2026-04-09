@@ -7,13 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class LaneDTO {
+public class ReferenciaDTO {
     private Long id;
     private String nombre;
-    private String descripcion;
-    private Integer orden;
-    private Double posicionX;
-    private Double posicionY;
-    private ReferenciaDTO proceso;
-    private ReferenciaDTO rolProceso;
 }

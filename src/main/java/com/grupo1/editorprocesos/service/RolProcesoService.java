@@ -10,4 +10,9 @@ public interface RolProcesoService {
     void eliminarRol(Long id);
     List<RolProcesoDTO> listarPorEmpresa(Long empresaId);
     RolProcesoDTO obtenerPorId(Long id);
+
+    /**
+     * Devuelve la entidad RolProceso. Método interno para ser usado por otros servicios.
+     */
+    com.grupo1.editorprocesos.model.entity.process.RolProceso obtenerEntityById(Long id);
 }

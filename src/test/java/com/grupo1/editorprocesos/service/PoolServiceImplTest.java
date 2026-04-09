@@ -11,6 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import static org.mockito.ArgumentMatchers.any;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
@@ -22,7 +23,6 @@ import com.grupo1.editorprocesos.model.entity.core.Empresa;
 import com.grupo1.editorprocesos.model.entity.core.Pool;
 import com.grupo1.editorprocesos.model.entity.core.Usuario;
 import com.grupo1.editorprocesos.model.enums.RolSistema;
-import com.grupo1.editorprocesos.repository.EmpresaRepository;
 import com.grupo1.editorprocesos.repository.PoolRepository;
 import com.grupo1.editorprocesos.repository.ProcesoRepository;
 import com.grupo1.editorprocesos.repository.UsuarioRepository;
@@ -40,7 +40,7 @@ class PoolServiceImplTest {
     private ProcesoRepository procesoRepository;
 
     @Mock
-    private EmpresaRepository empresaRepository;
+    private EmpresaService empresaService;
 
     @Mock
     private UsuarioRepository usuarioRepository;
@@ -76,7 +76,7 @@ class PoolServiceImplTest {
     void crearPool_exitoso() {
         PoolDTO dto = new PoolDTO();
         dto.setNombre("Pool Test");
-        dto.setEmpresaId(1L);
+        dto.setEmpresa(new com.grupo1.editorprocesos.dto.ReferenciaDTO(1L, null));
 
         Pool pool = new Pool();
         pool.setId(5L);
@@ -86,22 +86,22 @@ class PoolServiceImplTest {
         PoolDTO resultado = new PoolDTO();
         resultado.setNombre("Pool Test");
 
-        when(empresaRepository.findById(1L)).thenReturn(Optional.of(empresa));
+        when(empresaService.obtenerEntityById(1L)).thenReturn(empresa);
         when(poolRepository.save(any(Pool.class))).thenReturn(pool);
         when(modelMapper.map(pool, PoolDTO.class)).thenReturn(resultado);
 
         PoolDTO result = poolService.crearPool(dto);
 
         assertThat(result.getNombre()).isEqualTo("Pool Test");
-        assertThat(result.getEmpresaId()).isEqualTo(1L);
+        assertThat(result.getEmpresa().getId()).isEqualTo(1L);
     }
 
     @Test
     void crearPool_empresaNoEncontrada() {
         PoolDTO dto = new PoolDTO();
-        dto.setEmpresaId(99L);
+        dto.setEmpresa(new com.grupo1.editorprocesos.dto.ReferenciaDTO(99L, null));
 
-        when(empresaRepository.findById(99L)).thenReturn(Optional.empty());
+        when(empresaService.obtenerEntityById(99L)).thenThrow(new com.grupo1.editorprocesos.exception.ResourceNotFoundException("Empresa no encontrada"));
 
         assertThatThrownBy(() -> poolService.crearPool(dto))
                 .isInstanceOf(ResourceNotFoundException.class);
@@ -112,9 +112,9 @@ class PoolServiceImplTest {
         usuario.setRolSistema(RolSistema.LECTOR);
 
         PoolDTO dto = new PoolDTO();
-        dto.setEmpresaId(1L);
+        dto.setEmpresa(new com.grupo1.editorprocesos.dto.ReferenciaDTO(1L, null));
 
-        when(empresaRepository.findById(1L)).thenReturn(Optional.of(empresa));
+        when(empresaService.obtenerEntityById(1L)).thenReturn(empresa);
 
         assertThatThrownBy(() -> poolService.crearPool(dto))
                 .isInstanceOf(UnauthorizedException.class)
@@ -129,7 +129,7 @@ class PoolServiceImplTest {
 
         PoolDTO dto1 = new PoolDTO();
 
-        when(empresaRepository.findById(1L)).thenReturn(Optional.of(empresa));
+        when(empresaService.obtenerEntityById(1L)).thenReturn(empresa);
         when(poolRepository.findByEmpresaId(1L)).thenReturn(List.of(pool1));
         when(modelMapper.map(pool1, PoolDTO.class)).thenReturn(dto1);
 
@@ -195,7 +195,7 @@ class PoolServiceImplTest {
 
     @Test
     void listarPoolsPorEmpresa_empresaNoEncontrada() {
-        when(empresaRepository.findById(99L)).thenReturn(Optional.empty());
+        when(empresaService.obtenerEntityById(99L)).thenThrow(new com.grupo1.editorprocesos.exception.ResourceNotFoundException("Empresa no encontrada"));
 
         assertThatThrownBy(() -> poolService.listarPoolsPorEmpresa(99L))
                 .isInstanceOf(ResourceNotFoundException.class);
@@ -207,7 +207,7 @@ class PoolServiceImplTest {
 
         PoolDTO dto = new PoolDTO();
         dto.setNombre("Pool Admin");
-        dto.setEmpresaId(1L);
+        dto.setEmpresa(new com.grupo1.editorprocesos.dto.ReferenciaDTO(1L, null));
 
         Pool pool = new Pool();
         pool.setId(10L);
@@ -217,7 +217,7 @@ class PoolServiceImplTest {
         PoolDTO resultado = new PoolDTO();
         resultado.setNombre("Pool Admin");
 
-        when(empresaRepository.findById(1L)).thenReturn(Optional.of(empresa));
+        when(empresaService.obtenerEntityById(1L)).thenReturn(empresa);
         when(poolRepository.save(any(Pool.class))).thenReturn(pool);
         when(modelMapper.map(pool, PoolDTO.class)).thenReturn(resultado);
 
@@ -233,13 +233,96 @@ class PoolServiceImplTest {
         usuario.setEmpresa(otraEmpresa);
 
         PoolDTO dto = new PoolDTO();
-        dto.setEmpresaId(1L);
+        dto.setEmpresa(new com.grupo1.editorprocesos.dto.ReferenciaDTO(1L, null));
 
-        when(empresaRepository.findById(1L)).thenReturn(Optional.of(empresa));
+        when(empresaService.obtenerEntityById(1L)).thenReturn(empresa);
 
         assertThatThrownBy(() -> poolService.crearPool(dto))
                 .isInstanceOf(UnauthorizedException.class)
                 .hasMessageContaining("no tiene acceso");
+    }
+
+    @Test
+    void crearPool_sinReferenciaEmpresa_falla() {
+        PoolDTO dto = new PoolDTO();
+        dto.setNombre("Sin empresa");
+
+        assertThatThrownBy(() -> poolService.crearPool(dto))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("empresa es requerida");
+    }
+
+    @Test
+    void eliminarPool_exitoso() {
+        Pool pool = new Pool();
+        pool.setId(5L);
+        pool.setEmpresa(empresa);
+
+        when(poolRepository.findById(5L)).thenReturn(Optional.of(pool));
+        when(procesoRepository.findByPoolId(5L)).thenReturn(List.of());
+
+        poolService.eliminarPool(5L);
+
+        verify(poolRepository).delete(pool);
+    }
+
+    @Test
+    void eliminarPool_conProcesosAsignados_falla() {
+        Pool pool = new Pool();
+        pool.setId(5L);
+        pool.setEmpresa(empresa);
+
+        when(poolRepository.findById(5L)).thenReturn(Optional.of(pool));
+        when(procesoRepository.findByPoolId(5L)).thenReturn(List.of(new com.grupo1.editorprocesos.model.entity.process.Proceso()));
+
+        assertThatThrownBy(() -> poolService.eliminarPool(5L))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("procesos asignados");
+    }
+
+    @Test
+    void eliminarPool_sinPermisos_falla() {
+        usuario.setRolSistema(RolSistema.LECTOR);
+
+        Pool pool = new Pool();
+        pool.setId(5L);
+        pool.setEmpresa(empresa);
+
+        when(poolRepository.findById(5L)).thenReturn(Optional.of(pool));
+
+        assertThatThrownBy(() -> poolService.eliminarPool(5L))
+                .isInstanceOf(UnauthorizedException.class)
+                .hasMessageContaining("eliminar pools");
+    }
+
+    @Test
+    void obtenerEntityById_exitoso() {
+        Pool pool = new Pool();
+        pool.setId(7L);
+        when(poolRepository.findById(7L)).thenReturn(Optional.of(pool));
+
+        Pool result = poolService.obtenerEntityById(7L);
+
+        assertThat(result.getId()).isEqualTo(7L);
+    }
+
+    @Test
+    void obtenerEntityById_noEncontrado() {
+        when(poolRepository.findById(77L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> poolService.obtenerEntityById(77L))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Pool no encontrado");
+    }
+
+    @Test
+    void listarPoolsPorEmpresa_sinHeaderUsuario_falla() {
+        when(httpServletRequest.getHeader("X-User-Email")).thenReturn(null);
+        when(empresaService.obtenerEntityById(1L)).thenReturn(empresa);
+
+        assertThatThrownBy(() -> poolService.listarPoolsPorEmpresa(1L))
+                .isInstanceOf(UnauthorizedException.class)
+                .hasMessageContaining("X-User-Email");
     }
 }
 

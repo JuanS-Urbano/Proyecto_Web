@@ -11,5 +11,5 @@ public class ArcoDTO {
     private Long id;
     private String origenId; // ID del elemento origen (Actividad, Gateway, etc.)
     private String destinoId; // ID del elemento destino (Actividad, Gateway, etc.)
-    private Long procesoId;
+    private ReferenciaDTO proceso;
 }

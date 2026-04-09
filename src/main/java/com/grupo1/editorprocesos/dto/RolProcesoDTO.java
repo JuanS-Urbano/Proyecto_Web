@@ -7,5 +7,5 @@ public class RolProcesoDTO {
     private Long id;
     private String nombre;
     private String descripcion;
-    private Long empresaId;
+    private ReferenciaDTO empresa;
 }

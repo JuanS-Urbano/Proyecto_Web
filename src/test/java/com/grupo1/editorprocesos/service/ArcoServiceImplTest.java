@@ -28,7 +28,6 @@ import com.grupo1.editorprocesos.repository.ActividadRepository;
 import com.grupo1.editorprocesos.repository.ArcoRepository;
 import com.grupo1.editorprocesos.repository.GatewayRepository;
 import com.grupo1.editorprocesos.repository.HistorialCambiosRepository;
-import com.grupo1.editorprocesos.repository.ProcesoRepository;
 import com.grupo1.editorprocesos.repository.UsuarioRepository;
 import com.grupo1.editorprocesos.service.impl.ArcoServiceImpl;
 
@@ -44,7 +43,7 @@ class ArcoServiceImplTest {
     private com.grupo1.editorprocesos.service.PermisosPoolService permisosPoolService;
 
     @Mock
-    private ProcesoRepository procesoRepository;
+    private ProcesoService procesoService;
 
     @Mock
     private UsuarioRepository usuarioRepository;
@@ -101,11 +100,11 @@ class ArcoServiceImplTest {
     @Test
     void crearArco_exitoso() {
         ArcoDTO dto = new ArcoDTO();
-        dto.setProcesoId(5L);
+        dto.setProceso(new com.grupo1.editorprocesos.dto.ReferenciaDTO(5L, null));
         dto.setOrigenId("Act1");
         dto.setDestinoId("Act2");
 
-        when(procesoRepository.findById(5L)).thenReturn(Optional.of(proceso));
+        when(procesoService.obtenerEntityById(5L)).thenReturn(proceso);
         when(actividadRepository.findByNombreAndProcesoId("Act1", 5L)).thenReturn(Optional.of(new Actividad()));
         when(actividadRepository.findByNombreAndProcesoId("Act2", 5L)).thenReturn(Optional.of(new Actividad()));
         when(arcoRepository.findByOrigenIdAndDestinoIdAndProcesoId("Act1", "Act2", 5L)).thenReturn(Optional.empty());
@@ -120,11 +119,11 @@ class ArcoServiceImplTest {
     @Test
     void crearArco_mismaReferencia() {
         ArcoDTO dto = new ArcoDTO();
-        dto.setProcesoId(5L);
+        dto.setProceso(new com.grupo1.editorprocesos.dto.ReferenciaDTO(5L, null));
         dto.setOrigenId("Act1");
         dto.setDestinoId("Act1");
 
-        when(procesoRepository.findById(5L)).thenReturn(Optional.of(proceso));
+        when(procesoService.obtenerEntityById(5L)).thenReturn(proceso);
         when(actividadRepository.findByNombreAndProcesoId("Act1", 5L)).thenReturn(Optional.of(new Actividad()));
 
         assertThatThrownBy(() -> arcoService.crearArco(dto))
@@ -135,11 +134,11 @@ class ArcoServiceImplTest {
     @Test
     void crearArco_elementoNoEncontrado() {
         ArcoDTO dto = new ArcoDTO();
-        dto.setProcesoId(5L);
+        dto.setProceso(new com.grupo1.editorprocesos.dto.ReferenciaDTO(5L, null));
         dto.setOrigenId("Act3");
         dto.setDestinoId("Act2");
 
-        when(procesoRepository.findById(5L)).thenReturn(Optional.of(proceso));
+        when(procesoService.obtenerEntityById(5L)).thenReturn(proceso);
         when(actividadRepository.findByNombreAndProcesoId("Act3", 5L)).thenReturn(Optional.empty());
         when(gatewayRepository.findByNombreAndProcesoId("Act3", 5L)).thenReturn(Optional.empty());
 
@@ -151,11 +150,11 @@ class ArcoServiceImplTest {
     @Test
     void crearArco_duplicado() {
         ArcoDTO dto = new ArcoDTO();
-        dto.setProcesoId(5L);
+        dto.setProceso(new com.grupo1.editorprocesos.dto.ReferenciaDTO(5L, null));
         dto.setOrigenId("Act1");
         dto.setDestinoId("Act2");
 
-        when(procesoRepository.findById(5L)).thenReturn(Optional.of(proceso));
+        when(procesoService.obtenerEntityById(5L)).thenReturn(proceso);
         when(actividadRepository.findByNombreAndProcesoId("Act1", 5L)).thenReturn(Optional.of(new Actividad()));
         when(actividadRepository.findByNombreAndProcesoId("Act2", 5L)).thenReturn(Optional.of(new Actividad()));
         when(arcoRepository.findByOrigenIdAndDestinoIdAndProcesoId("Act1", "Act2", 5L)).thenReturn(Optional.of(arco));
