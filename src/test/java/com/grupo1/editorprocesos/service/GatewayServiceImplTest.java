@@ -30,7 +30,7 @@ import com.grupo1.editorprocesos.model.enums.TipoGateway;
 import com.grupo1.editorprocesos.repository.ArcoRepository;
 import com.grupo1.editorprocesos.repository.GatewayRepository;
 import com.grupo1.editorprocesos.repository.HistorialCambiosRepository;
-import com.grupo1.editorprocesos.repository.ProcesoRepository;
+import com.grupo1.editorprocesos.service.ProcesoService;
 import com.grupo1.editorprocesos.repository.UsuarioRepository;
 import com.grupo1.editorprocesos.service.impl.GatewayServiceImpl;
 
@@ -46,7 +46,7 @@ class GatewayServiceImplTest {
     private com.grupo1.editorprocesos.service.PermisosPoolService permisosPoolService;
 
     @Mock
-    private ProcesoRepository procesoRepository;
+    private ProcesoService procesoService;
 
     @Mock
     private UsuarioRepository usuarioRepository;
@@ -100,11 +100,11 @@ class GatewayServiceImplTest {
     @Test
     void crearGateway_exitoso() {
         GatewayDTO dto = new GatewayDTO();
-        dto.setProcesoId(5L);
+        dto.setProceso(new com.grupo1.editorprocesos.dto.ReferenciaDTO(5L, null));
         dto.setNombre("NuevoGateway");
         dto.setTipoGateway(TipoGateway.EXCLUSIVO);
 
-        when(procesoRepository.findById(5L)).thenReturn(Optional.of(proceso));
+        when(procesoService.obtenerEntityById(5L)).thenReturn(proceso);
         when(gatewayRepository.findByNombreAndProcesoId("NuevoGateway", 5L)).thenReturn(Optional.empty());
         when(gatewayRepository.save(any(Gateway.class))).thenReturn(gateway);
 
@@ -117,11 +117,11 @@ class GatewayServiceImplTest {
     @Test
     void crearGateway_nombreDuplicado() {
         GatewayDTO dto = new GatewayDTO();
-        dto.setProcesoId(5L);
+        dto.setProceso(new com.grupo1.editorprocesos.dto.ReferenciaDTO(5L, null));
         dto.setNombre("GatewayX");
         dto.setTipoGateway(TipoGateway.EXCLUSIVO);
 
-        when(procesoRepository.findById(5L)).thenReturn(Optional.of(proceso));
+        when(procesoService.obtenerEntityById(5L)).thenReturn(proceso);
         when(gatewayRepository.findByNombreAndProcesoId("GatewayX", 5L)).thenReturn(Optional.of(new Gateway()));
 
         assertThatThrownBy(() -> gatewayService.crearGateway(dto))
@@ -132,11 +132,11 @@ class GatewayServiceImplTest {
     @Test
     void crearGateway_tipoGatewayNulo() {
         GatewayDTO dto = new GatewayDTO();
-        dto.setProcesoId(5L);
+        dto.setProceso(new com.grupo1.editorprocesos.dto.ReferenciaDTO(5L, null));
         dto.setNombre("GatewayX");
         // tipoGateway is null
 
-        when(procesoRepository.findById(5L)).thenReturn(Optional.of(proceso));
+        when(procesoService.obtenerEntityById(5L)).thenReturn(proceso);
 
         assertThatThrownBy(() -> gatewayService.crearGateway(dto))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -254,7 +254,7 @@ class GatewayServiceImplTest {
 
     @Test
     void listarGatewaysPorProceso_exitoso() {
-        when(procesoRepository.findById(5L)).thenReturn(Optional.of(proceso));
+        when(procesoService.obtenerEntityById(5L)).thenReturn(proceso);
         when(gatewayRepository.findByProcesoId(5L)).thenReturn(List.of(gateway));
 
         List<GatewayDTO> result = gatewayService.listarGatewaysPorProceso(5L);
@@ -312,10 +312,10 @@ class GatewayServiceImplTest {
     @Test
     void obtenerUsuarioActual_sinHeader() {
         when(httpServletRequest.getHeader("X-User-Email")).thenReturn(null);
-        when(procesoRepository.findById(5L)).thenReturn(Optional.of(proceso));
+        when(procesoService.obtenerEntityById(5L)).thenReturn(proceso);
 
         GatewayDTO dto = new GatewayDTO();
-        dto.setProcesoId(5L);
+        dto.setProceso(new com.grupo1.editorprocesos.dto.ReferenciaDTO(5L, null));
 
         assertThatThrownBy(() -> gatewayService.crearGateway(dto))
                 .isInstanceOf(UnauthorizedException.class)
@@ -333,10 +333,10 @@ class GatewayServiceImplTest {
 
         when(httpServletRequest.getHeader("X-User-Email")).thenReturn("otra@emp.com");
         when(usuarioRepository.findByEmail("otra@emp.com")).thenReturn(Optional.of(usuarioOtra));
-        when(procesoRepository.findById(5L)).thenReturn(Optional.of(proceso));
+        when(procesoService.obtenerEntityById(5L)).thenReturn(proceso);
 
         GatewayDTO dto = new GatewayDTO();
-        dto.setProcesoId(5L);
+        dto.setProceso(new com.grupo1.editorprocesos.dto.ReferenciaDTO(5L, null));
 
         assertThatThrownBy(() -> gatewayService.crearGateway(dto))
                 .isInstanceOf(UnauthorizedException.class);

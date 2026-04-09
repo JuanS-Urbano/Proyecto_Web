@@ -21,7 +21,7 @@ import com.grupo1.editorprocesos.exception.ResourceNotFoundException;
 import com.grupo1.editorprocesos.model.entity.core.Empresa;
 import com.grupo1.editorprocesos.model.entity.process.RolProceso;
 import com.grupo1.editorprocesos.repository.ActividadRepository;
-import com.grupo1.editorprocesos.repository.EmpresaRepository;
+import com.grupo1.editorprocesos.service.EmpresaService;
 import com.grupo1.editorprocesos.repository.RolProcesoRepository;
 import com.grupo1.editorprocesos.service.impl.RolProcesoServiceImpl;
 
@@ -32,7 +32,7 @@ class RolProcesoServiceImplTest {
     private RolProcesoRepository rolProcesoRepository;
 
     @Mock
-    private EmpresaRepository empresaRepository;
+    private EmpresaService empresaService;
 
     @Mock
     private ActividadRepository actividadRepository;
@@ -56,7 +56,7 @@ class RolProcesoServiceImplTest {
         RolProcesoDTO dto = new RolProcesoDTO();
         dto.setNombre("Analista");
         dto.setDescripcion("Analista de procesos");
-        dto.setEmpresaId(1L);
+        dto.setEmpresa(new com.grupo1.editorprocesos.dto.ReferenciaDTO(1L, null));
 
         RolProceso rol = new RolProceso();
         rol.setId(5L);
@@ -66,22 +66,22 @@ class RolProcesoServiceImplTest {
         RolProcesoDTO resultado = new RolProcesoDTO();
         resultado.setNombre("Analista");
 
-        when(empresaRepository.findById(1L)).thenReturn(Optional.of(empresa));
+        when(empresaService.obtenerEntityById(1L)).thenReturn(empresa);
         when(rolProcesoRepository.save(any(RolProceso.class))).thenReturn(rol);
         when(modelMapper.map(rol, RolProcesoDTO.class)).thenReturn(resultado);
 
         RolProcesoDTO result = rolProcesoService.crearRol(dto);
 
         assertThat(result.getNombre()).isEqualTo("Analista");
-        assertThat(result.getEmpresaId()).isEqualTo(1L);
+        assertThat(result.getEmpresa().getId()).isEqualTo(1L);
     }
 
     @Test
     void crearRol_empresaNoEncontrada() {
         RolProcesoDTO dto = new RolProcesoDTO();
-        dto.setEmpresaId(99L);
+        dto.setEmpresa(new com.grupo1.editorprocesos.dto.ReferenciaDTO(99L, null));
 
-        when(empresaRepository.findById(99L)).thenReturn(Optional.empty());
+        when(empresaService.obtenerEntityById(99L)).thenThrow(new com.grupo1.editorprocesos.exception.ResourceNotFoundException("Empresa no encontrada"));
 
         assertThatThrownBy(() -> rolProcesoService.crearRol(dto))
                 .isInstanceOf(ResourceNotFoundException.class);

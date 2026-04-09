@@ -24,8 +24,8 @@ import com.grupo1.editorprocesos.model.entity.process.Lane;
 import com.grupo1.editorprocesos.model.entity.process.Proceso;
 import com.grupo1.editorprocesos.model.entity.process.RolProceso;
 import com.grupo1.editorprocesos.repository.LaneRepository;
-import com.grupo1.editorprocesos.repository.ProcesoRepository;
-import com.grupo1.editorprocesos.repository.RolProcesoRepository;
+import com.grupo1.editorprocesos.service.ProcesoService;
+import com.grupo1.editorprocesos.service.RolProcesoService;
 import com.grupo1.editorprocesos.repository.UsuarioRepository;
 import com.grupo1.editorprocesos.service.impl.LaneServiceImpl;
 
@@ -39,10 +39,10 @@ class LaneServiceImplTest {
     private LaneRepository laneRepository;
 
     @Mock
-    private ProcesoRepository procesoRepository;
+    private ProcesoService procesoService;
 
     @Mock
-    private RolProcesoRepository rolProcesoRepository;
+    private RolProcesoService rolProcesoService;
 
     @Mock
     private UsuarioRepository usuarioRepository;
@@ -87,12 +87,12 @@ class LaneServiceImplTest {
 
     @Test
     void crearLane_exitoso() {
-        when(procesoRepository.findById(proceso.getId())).thenReturn(Optional.of(proceso));
+        when(procesoService.obtenerEntityById(proceso.getId())).thenReturn(proceso);
 
         RolProceso rolProceso = new RolProceso();
         rolProceso.setId(5L);
         rolProceso.setEmpresa(empresa);
-        when(rolProcesoRepository.findById(rolProceso.getId())).thenReturn(Optional.of(rolProceso));
+        when(rolProcesoService.obtenerEntityById(rolProceso.getId())).thenReturn(rolProceso);
 
         Lane laneGuardado = new Lane();
         laneGuardado.setId(123L);
@@ -102,13 +102,13 @@ class LaneServiceImplTest {
 
         LaneDTO request = new LaneDTO();
         request.setNombre("Mi lane");
-        request.setRolProcesoId(rolProceso.getId());
+        request.setRolProceso(new com.grupo1.editorprocesos.dto.ReferenciaDTO(rolProceso.getId(), null));
 
         LaneDTO result = laneService.crearLane(proceso.getId(), request);
 
         assertThat(result.getId()).isEqualTo(123L);
         assertThat(result.getNombre()).isEqualTo("Mi lane");
-        assertThat(result.getRolProcesoId()).isEqualTo(rolProceso.getId());
+        assertThat(result.getRolProceso().getId()).isEqualTo(rolProceso.getId());
 
         ArgumentCaptor<Lane> captor = ArgumentCaptor.forClass(Lane.class);
         verify(laneRepository).save(captor.capture());
@@ -118,7 +118,7 @@ class LaneServiceImplTest {
     @Test
     void crearLane_errorProcesoNoExiste() {
         Long procesoId = proceso.getId();
-        when(procesoRepository.findById(procesoId)).thenReturn(Optional.empty());
+        when(procesoService.obtenerEntityById(procesoId)).thenThrow(new ResourceNotFoundException("Proceso no encontrado"));
 
         LaneDTO request = new LaneDTO();
         request.setNombre("Mi lane");
@@ -129,7 +129,7 @@ class LaneServiceImplTest {
     @Test
     void crearLane_errorNombreVacio() {
         Long procesoId = proceso.getId();
-        when(procesoRepository.findById(procesoId)).thenReturn(Optional.of(proceso));
+        when(procesoService.obtenerEntityById(procesoId)).thenReturn(proceso);
 
         LaneDTO request = new LaneDTO();
         request.setNombre("  ");
@@ -140,12 +140,12 @@ class LaneServiceImplTest {
     @Test
     void crearLane_errorRolProcesoNoExiste() {
         Long procesoId = proceso.getId();
-        when(procesoRepository.findById(procesoId)).thenReturn(Optional.of(proceso));
-        when(rolProcesoRepository.findById(7L)).thenReturn(Optional.empty());
+        when(procesoService.obtenerEntityById(procesoId)).thenReturn(proceso);
+        when(rolProcesoService.obtenerEntityById(7L)).thenThrow(new ResourceNotFoundException("RolProceso no encontrado"));
 
         LaneDTO request = new LaneDTO();
         request.setNombre("Mi lane");
-        request.setRolProcesoId(7L);
+        request.setRolProceso(new com.grupo1.editorprocesos.dto.ReferenciaDTO(7L, null));
 
         org.junit.jupiter.api.Assertions.assertThrows(ResourceNotFoundException.class, () -> laneService.crearLane(procesoId, request));
     }
@@ -153,7 +153,7 @@ class LaneServiceImplTest {
     @Test
     void crearLane_errorRolProcesoEmpresaDiferente() {
         Long procesoId = proceso.getId();
-        when(procesoRepository.findById(procesoId)).thenReturn(Optional.of(proceso));
+        when(procesoService.obtenerEntityById(procesoId)).thenReturn(proceso);
 
         Empresa otraEmpresa = new Empresa();
         otraEmpresa.setId(99L);
@@ -161,18 +161,18 @@ class LaneServiceImplTest {
         RolProceso rolProceso = new RolProceso();
         rolProceso.setId(5L);
         rolProceso.setEmpresa(otraEmpresa);
-        when(rolProcesoRepository.findById(rolProceso.getId())).thenReturn(Optional.of(rolProceso));
+        when(rolProcesoService.obtenerEntityById(rolProceso.getId())).thenReturn(rolProceso);
 
         LaneDTO request = new LaneDTO();
         request.setNombre("Mi lane");
-        request.setRolProcesoId(rolProceso.getId());
+        request.setRolProceso(new com.grupo1.editorprocesos.dto.ReferenciaDTO(rolProceso.getId(), null));
 
         org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> laneService.crearLane(procesoId, request));
     }
 
     @Test
     void listarLanesPorProceso_exitoso() {
-        when(procesoRepository.findById(10L)).thenReturn(Optional.of(proceso));
+        when(procesoService.obtenerEntityById(10L)).thenReturn(proceso);
         Lane lane = new Lane();
         lane.setId(1L);
         when(laneRepository.findByProcesoId(10L)).thenReturn(java.util.List.of(lane));
@@ -251,7 +251,7 @@ class LaneServiceImplTest {
         when(actividadRepository.findByLaneId(1L)).thenReturn(java.util.Collections.emptyList());
 
         // Inyectamos esto
-        laneService = new LaneServiceImpl(laneRepository, procesoRepository, rolProcesoRepository,
+        laneService = new LaneServiceImpl(laneRepository, procesoService, rolProcesoService,
                 usuarioRepository, actividadRepository, httpServletRequest, permisosPoolService);
 
         laneService.eliminarLane(1L);
@@ -273,7 +273,7 @@ class LaneServiceImplTest {
         when(actividadRepository.findByLaneId(1L)).thenReturn(java.util.List.of(actividad));
 
         // Inyectamos esto
-        laneService = new LaneServiceImpl(laneRepository, procesoRepository, rolProcesoRepository,
+        laneService = new LaneServiceImpl(laneRepository, procesoService, rolProcesoService,
                 usuarioRepository, actividadRepository, httpServletRequest, permisosPoolService);
 
         assertThatThrownBy(() -> laneService.eliminarLane(1L))

@@ -53,9 +53,13 @@ public class ActividadServiceImpl implements ActividadService {
     @Transactional
     public ActividadDTO crearActividad(ActividadDTO actividadDTO) {
         // 1. Validar que el proceso exista
-        Proceso proceso = procesoRepository.findById(actividadDTO.getProcesoId())
+        if (actividadDTO.getProceso() == null || actividadDTO.getProceso().getId() == null) {
+            throw new IllegalArgumentException("La referencia al proceso es requerida");
+        }
+
+        Proceso proceso = procesoRepository.findById(actividadDTO.getProceso().getId())
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Proceso no encontrado con ID: " + actividadDTO.getProcesoId()));
+                        "Proceso no encontrado con ID: " + actividadDTO.getProceso().getId()));
 
         // 2. Validar que el usuario actual pertenezca a la empresa del proceso
         Usuario usuarioActual = obtenerUsuarioActual();
@@ -79,9 +83,9 @@ public class ActividadServiceImpl implements ActividadService {
         // =====================================================================================
         // HU-22: Validar que el lane exista y pertenezca al mismo proceso que la actividad.
         // =====================================================================================
-        if (actividadDTO.getLaneId() != null) {
-            laneService.validarLanePerteneceAlProceso(actividadDTO.getLaneId(), proceso.getId());
-            Lane lane = laneService.obtenerLaneEntityById(actividadDTO.getLaneId());
+        if (actividadDTO.getLane() != null && actividadDTO.getLane().getId() != null) {
+            laneService.validarLanePerteneceAlProceso(actividadDTO.getLane().getId(), proceso.getId());
+            Lane lane = laneService.obtenerLaneEntityById(actividadDTO.getLane().getId());
             actividad.setLane(lane);
         }
 
@@ -150,13 +154,13 @@ public class ActividadServiceImpl implements ActividadService {
         }
 
         // HU-22: Al cambiar el laneId, validar que el nuevo lane pertenezca al mismo proceso.
-        if (actividadDTO.getLaneId() != null) {
+        if (actividadDTO.getLane() != null && actividadDTO.getLane().getId() != null) {
             Long laneActualId = actividad.getLane() != null ? actividad.getLane().getId() : null;
-            if (!actividadDTO.getLaneId().equals(laneActualId)) {
-                laneService.validarLanePerteneceAlProceso(actividadDTO.getLaneId(), proceso.getId());
-                Lane nuevoLane = laneService.obtenerLaneEntityById(actividadDTO.getLaneId());
+            if (!actividadDTO.getLane().getId().equals(laneActualId)) {
+                laneService.validarLanePerteneceAlProceso(actividadDTO.getLane().getId(), proceso.getId());
+                Lane nuevoLane = laneService.obtenerLaneEntityById(actividadDTO.getLane().getId());
                 cambios.append("Lane: ").append(laneActualId)
-                        .append(" → ").append(actividadDTO.getLaneId()).append(". ");
+                        .append(" → ").append(actividadDTO.getLane().getId()).append(". ");
                 actividad.setLane(nuevoLane);
                 huboCambios = true;
             }
@@ -285,9 +289,9 @@ public class ActividadServiceImpl implements ActividadService {
         dto.setTipoActividad(actividad.getTipoActividad());
         dto.setPosicionX(actividad.getPosicionX());
         dto.setPosicionY(actividad.getPosicionY());
-        dto.setProcesoId(actividad.getProceso().getId());
+        dto.setProceso(new com.grupo1.editorprocesos.dto.ReferenciaDTO(actividad.getProceso().getId(), actividad.getProceso().getNombre()));
         if (actividad.getLane() != null) {
-            dto.setLaneId(actividad.getLane().getId());
+            dto.setLane(new com.grupo1.editorprocesos.dto.ReferenciaDTO(actividad.getLane().getId(), actividad.getLane().getNombre()));
         }
         return dto;
     }

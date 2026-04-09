@@ -26,9 +26,9 @@ import com.grupo1.editorprocesos.model.entity.process.HistorialCambios;
 import com.grupo1.editorprocesos.model.entity.process.Proceso;
 import com.grupo1.editorprocesos.model.enums.EstadoProceso;
 import com.grupo1.editorprocesos.model.enums.RolSistema;
-import com.grupo1.editorprocesos.repository.EmpresaRepository;
+import com.grupo1.editorprocesos.service.EmpresaService;
 import com.grupo1.editorprocesos.repository.HistorialCambiosRepository;
-import com.grupo1.editorprocesos.repository.PoolRepository;
+import com.grupo1.editorprocesos.service.PoolService;
 import com.grupo1.editorprocesos.repository.ProcesoRepository;
 import com.grupo1.editorprocesos.repository.UsuarioRepository;
 import com.grupo1.editorprocesos.service.impl.ProcesoServiceImpl;
@@ -45,10 +45,10 @@ class ProcesoServiceImplTest {
     private com.grupo1.editorprocesos.service.PermisosPoolService permisosPoolService;
 
     @Mock
-    private PoolRepository poolRepository;
+    private PoolService poolService;
 
     @Mock
-    private EmpresaRepository empresaRepository;
+    private EmpresaService empresaService;
 
     @Mock
     private UsuarioRepository usuarioRepository;
@@ -98,21 +98,21 @@ class ProcesoServiceImplTest {
     @Test
     void crearProceso_exitoso() {
         ProcesoDTO request = new ProcesoDTO();
-        request.setPoolId(2L);
+        request.setPool(new com.grupo1.editorprocesos.dto.ReferenciaDTO(2L, null));
         request.setNombre("Proceso Test");
 
         ProcesoDTO resultadoDTO = new ProcesoDTO();
         resultadoDTO.setNombre("Proceso Test");
 
-        when(poolRepository.findById(2L)).thenReturn(Optional.of(pool));
+        when(poolService.obtenerEntityById(2L)).thenReturn(pool);
         when(procesoRepository.save(any(Proceso.class))).thenReturn(proceso);
         when(modelMapper.map(proceso, ProcesoDTO.class)).thenReturn(resultadoDTO);
 
         ProcesoDTO result = procesoService.crearProceso(request);
 
         assertThat(result.getNombre()).isEqualTo("Proceso Test");
-        assertThat(result.getPoolId()).isEqualTo(2L);
-        assertThat(result.getEmpresaId()).isEqualTo(1L);
+        assertThat(result.getPool().getId()).isEqualTo(2L);
+        assertThat(result.getEmpresa().getId()).isEqualTo(1L);
     }
 
     @Test
@@ -120,9 +120,9 @@ class ProcesoServiceImplTest {
         pool.setEmpresa(null);
         
         ProcesoDTO request = new ProcesoDTO();
-        request.setPoolId(2L);
+        request.setPool(new com.grupo1.editorprocesos.dto.ReferenciaDTO(2L, null));
 
-        when(poolRepository.findById(2L)).thenReturn(Optional.of(pool));
+        when(poolService.obtenerEntityById(2L)).thenReturn(pool);
 
         assertThatThrownBy(() -> procesoService.crearProceso(request))
                 .isInstanceOf(ResourceNotFoundException.class)
@@ -136,10 +136,10 @@ class ProcesoServiceImplTest {
         usuario.setEmpresa(otraEmpresa);
 
         ProcesoDTO request = new ProcesoDTO();
-        request.setPoolId(2L);
+        request.setPool(new com.grupo1.editorprocesos.dto.ReferenciaDTO(2L, null));
         request.setNombre("Proceso Test");
 
-        when(poolRepository.findById(2L)).thenReturn(Optional.of(pool));
+        when(poolService.obtenerEntityById(2L)).thenReturn(pool);
 
         assertThatThrownBy(() -> procesoService.crearProceso(request))
                 .isInstanceOf(UnauthorizedException.class);
@@ -195,7 +195,7 @@ class ProcesoServiceImplTest {
     @Test
     void listarProcesosPorPoolYEstado_exitoso() {
         ProcesoDTO dto = new ProcesoDTO();
-        when(poolRepository.findById(2L)).thenReturn(Optional.of(pool));
+        when(poolService.obtenerEntityById(2L)).thenReturn(pool);
         when(procesoRepository.buscarVisiblesPorPoolConFiltros(2L, EstadoProceso.BORRADOR, null, false))
             .thenReturn(List.of(proceso));
         when(modelMapper.map(proceso, ProcesoDTO.class)).thenReturn(dto);
@@ -208,7 +208,7 @@ class ProcesoServiceImplTest {
     @Test
     void listarProcesosPorEmpresa_exitoso() {
         ProcesoDTO dto = new ProcesoDTO();
-        when(empresaRepository.findById(1L)).thenReturn(Optional.of(empresa));
+        when(empresaService.obtenerEntityById(1L)).thenReturn(empresa);
         when(procesoRepository.buscarVisiblesPorEmpresa(1L, false)).thenReturn(List.of(proceso));
         when(modelMapper.map(proceso, ProcesoDTO.class)).thenReturn(dto);
 
@@ -220,7 +220,7 @@ class ProcesoServiceImplTest {
     @Test
     void listarProcesosPorPool_exitoso() {
         ProcesoDTO dto = new ProcesoDTO();
-        when(poolRepository.findById(2L)).thenReturn(Optional.of(pool));
+        when(poolService.obtenerEntityById(2L)).thenReturn(pool);
         when(procesoRepository.buscarVisiblesPorPool(2L, false)).thenReturn(List.of(proceso));
         when(modelMapper.map(proceso, ProcesoDTO.class)).thenReturn(dto);
 
@@ -232,7 +232,7 @@ class ProcesoServiceImplTest {
     @Test
     void listarProcesosPorPoolYCategoria_exitoso() {
         ProcesoDTO dto = new ProcesoDTO();
-        when(poolRepository.findById(2L)).thenReturn(Optional.of(pool));
+        when(poolService.obtenerEntityById(2L)).thenReturn(pool);
         when(procesoRepository.buscarVisiblesPorPoolConFiltros(2L, null, "RRHH", false))
             .thenReturn(List.of(proceso));
         when(modelMapper.map(proceso, ProcesoDTO.class)).thenReturn(dto);
@@ -245,7 +245,7 @@ class ProcesoServiceImplTest {
     @Test
     void listarProcesosPorPoolConFiltros_conAmbosFiltros() {
         ProcesoDTO dto = new ProcesoDTO();
-        when(poolRepository.findById(2L)).thenReturn(Optional.of(pool));
+        when(poolService.obtenerEntityById(2L)).thenReturn(pool);
         when(procesoRepository.buscarVisiblesPorPoolConFiltros(2L, EstadoProceso.BORRADOR, "RRHH", false))
             .thenReturn(List.of(proceso));
         when(modelMapper.map(proceso, ProcesoDTO.class)).thenReturn(dto);
@@ -258,7 +258,7 @@ class ProcesoServiceImplTest {
     @Test
     void listarProcesosPorPoolConFiltros_sinFiltros() {
         ProcesoDTO dto = new ProcesoDTO();
-        when(poolRepository.findById(2L)).thenReturn(Optional.of(pool));
+        when(poolService.obtenerEntityById(2L)).thenReturn(pool);
         when(procesoRepository.buscarVisiblesPorPoolConFiltros(2L, null, null, false)).thenReturn(List.of(proceso));
         when(modelMapper.map(proceso, ProcesoDTO.class)).thenReturn(dto);
 
@@ -271,7 +271,7 @@ class ProcesoServiceImplTest {
     @Test
     void buscarProcesosPorNombre_exitoso() {
         ProcesoDTO dto = new ProcesoDTO();
-        when(poolRepository.findById(2L)).thenReturn(Optional.of(pool));
+        when(poolService.obtenerEntityById(2L)).thenReturn(pool);
         when(procesoRepository.buscarVisiblesPorPoolYNombre(2L, "Test", false)).thenReturn(List.of(proceso));
         when(modelMapper.map(proceso, ProcesoDTO.class)).thenReturn(dto);
 
@@ -312,7 +312,7 @@ class ProcesoServiceImplTest {
     @Test
     void crearProceso_poolIdNull() {
         ProcesoDTO request = new ProcesoDTO();
-        request.setPoolId(null);
+        request.setPool(new com.grupo1.editorprocesos.dto.ReferenciaDTO(null, null));
 
         assertThatThrownBy(() -> procesoService.crearProceso(request))
                 .isInstanceOf(IllegalArgumentException.class);
@@ -331,8 +331,8 @@ class ProcesoServiceImplTest {
         usuario.setEmpresa(null);
         
         ProcesoDTO dto = new ProcesoDTO();
-        dto.setPoolId(2L);
-        when(poolRepository.findById(2L)).thenReturn(Optional.of(pool));
+        dto.setPool(new com.grupo1.editorprocesos.dto.ReferenciaDTO(2L, null));
+        when(poolService.obtenerEntityById(2L)).thenReturn(pool);
 
         assertThatThrownBy(() -> procesoService.crearProceso(dto))
                 .isInstanceOf(UnauthorizedException.class)
@@ -344,8 +344,8 @@ class ProcesoServiceImplTest {
         org.mockito.Mockito.when(httpServletRequest.getHeader("X-User-Email")).thenReturn("");
         
         ProcesoDTO dto = new ProcesoDTO();
-        dto.setPoolId(2L);
-        when(poolRepository.findById(2L)).thenReturn(Optional.of(pool));
+        dto.setPool(new com.grupo1.editorprocesos.dto.ReferenciaDTO(2L, null));
+        when(poolService.obtenerEntityById(2L)).thenReturn(pool);
 
         assertThatThrownBy(() -> procesoService.crearProceso(dto))
                 .isInstanceOf(UnauthorizedException.class);
@@ -357,8 +357,8 @@ class ProcesoServiceImplTest {
         when(usuarioRepository.findByEmail("noexiste@empresa.com")).thenReturn(Optional.empty());
 
         ProcesoDTO dto = new ProcesoDTO();
-        dto.setPoolId(2L);
-        when(poolRepository.findById(2L)).thenReturn(Optional.of(pool));
+        dto.setPool(new com.grupo1.editorprocesos.dto.ReferenciaDTO(2L, null));
+        when(poolService.obtenerEntityById(2L)).thenReturn(pool);
 
         assertThatThrownBy(() -> procesoService.crearProceso(dto))
                 .isInstanceOf(UnauthorizedException.class);
@@ -370,7 +370,7 @@ class ProcesoServiceImplTest {
         org.mockito.Mockito.when(httpServletRequest.getHeader("X-User-Permissions"))
                 .thenReturn("PROCESO_COMPARTIDO_VER");
 
-        when(poolRepository.findById(2L)).thenReturn(Optional.of(pool));
+        when(poolService.obtenerEntityById(2L)).thenReturn(pool);
         when(procesoRepository.buscarVisiblesPorPool(2L, true)).thenReturn(List.of(proceso));
         when(modelMapper.map(proceso, ProcesoDTO.class)).thenReturn(dto);
 
@@ -385,7 +385,7 @@ class ProcesoServiceImplTest {
         ProcesoDTO dto = new ProcesoDTO();
         usuario.setRolSistema(RolSistema.ADMIN_PLATAFORMA);
 
-        when(poolRepository.findById(2L)).thenReturn(Optional.of(pool));
+        when(poolService.obtenerEntityById(2L)).thenReturn(pool);
         when(procesoRepository.buscarVisiblesPorPool(2L, true)).thenReturn(List.of(proceso));
         when(modelMapper.map(proceso, ProcesoDTO.class)).thenReturn(dto);
 

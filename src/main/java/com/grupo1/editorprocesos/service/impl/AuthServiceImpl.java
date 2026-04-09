@@ -40,11 +40,11 @@ public class AuthServiceImpl implements AuthService {
         // 4. Construir respuesta
         AuthResponseDTO response = new AuthResponseDTO();
         response.setToken("session-" + usuario.getId()); // Placeholder — se reemplazará por JWT en Fase 3
-        response.setUsuarioId(usuario.getId());
+        response.setUsuario(new com.grupo1.editorprocesos.dto.ReferenciaDTO(usuario.getId(), usuario.getEmail()));
         response.setEmail(usuario.getEmail());
         response.setRolSistema(usuario.getRolSistema().name());
         if (usuario.getEmpresa() != null) {
-            response.setEmpresaId(usuario.getEmpresa().getId());
+            response.setEmpresa(new com.grupo1.editorprocesos.dto.ReferenciaDTO(usuario.getEmpresa().getId(), usuario.getEmpresa().getNombre()));
         }
 
         return response;

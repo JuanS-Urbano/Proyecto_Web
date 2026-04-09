@@ -5,7 +5,7 @@ import com.grupo1.editorprocesos.exception.ResourceNotFoundException;
 import com.grupo1.editorprocesos.model.entity.core.Empresa;
 import com.grupo1.editorprocesos.model.entity.process.RolProceso;
 import com.grupo1.editorprocesos.repository.ActividadRepository;
-import com.grupo1.editorprocesos.repository.EmpresaRepository;
+import com.grupo1.editorprocesos.service.EmpresaService;
 import com.grupo1.editorprocesos.repository.RolProcesoRepository;
 import com.grupo1.editorprocesos.service.RolProcesoService;
 import lombok.RequiredArgsConstructor;
@@ -20,16 +20,17 @@ import java.util.List;
 public class RolProcesoServiceImpl implements RolProcesoService {
 
     private final RolProcesoRepository rolProcesoRepository;
-    private final EmpresaRepository empresaRepository;
+    private final EmpresaService empresaService;
     private final ActividadRepository actividadRepository;
     private final ModelMapper modelMapper;
 
     @Override
     @Transactional
     public RolProcesoDTO crearRol(RolProcesoDTO rolDTO) {
-        Empresa empresa = empresaRepository.findById(rolDTO.getEmpresaId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Empresa no encontrada con id: " + rolDTO.getEmpresaId()));
+        if (rolDTO.getEmpresa() == null || rolDTO.getEmpresa().getId() == null) {
+            throw new IllegalArgumentException("La referencia a la empresa es requerida");
+        }
+        Empresa empresa = empresaService.obtenerEntityById(rolDTO.getEmpresa().getId());
         RolProceso rol = new RolProceso();
         rol.setNombre(rolDTO.getNombre());
         rol.setDescripcion(rolDTO.getDescripcion());
@@ -99,7 +100,13 @@ public class RolProcesoServiceImpl implements RolProcesoService {
 
     private RolProcesoDTO toDTO(RolProceso r) {
         RolProcesoDTO dto = modelMapper.map(r, RolProcesoDTO.class);
-        dto.setEmpresaId(r.getEmpresa().getId());
+        dto.setEmpresa(new com.grupo1.editorprocesos.dto.ReferenciaDTO(r.getEmpresa().getId(), r.getEmpresa().getNombre()));
         return dto;
+    }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public RolProceso obtenerEntityById(Long id) {
+        return findById(id);
     }
 }

@@ -29,4 +29,9 @@ public interface ProcesoService {
     void eliminarProceso(Long id);
 
     List<HistorialCambiosDTO> obtenerHistorialProceso(Long procesoId);
+
+    /**
+     * Devuelve la entidad Proceso. Método interno para ser usado por otros servicios.
+     */
+    com.grupo1.editorprocesos.model.entity.process.Proceso obtenerEntityById(Long id);
 }

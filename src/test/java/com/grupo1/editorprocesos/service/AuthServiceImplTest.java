@@ -64,10 +64,10 @@ class AuthServiceImplTest {
         AuthResponseDTO response = authService.login(request);
 
         assertThat(response).isNotNull();
-        assertThat(response.getUsuarioId()).isEqualTo(10L);
+        assertThat(response.getUsuario().getId()).isEqualTo(10L);
         assertThat(response.getEmail()).isEqualTo("test@empresa.com");
         assertThat(response.getRolSistema()).isEqualTo("ADMIN_EMPRESA");
-        assertThat(response.getEmpresaId()).isEqualTo(1L);
+        assertThat(response.getEmpresa().getId()).isEqualTo(1L);
     }
 
     @Test
@@ -125,7 +125,7 @@ class AuthServiceImplTest {
 
         AuthResponseDTO response = authService.login(request);
 
-        assertThat(response.getEmpresaId()).isNull();
+        assertThat(response.getEmpresa()).isNull();
     }
 
     @Test

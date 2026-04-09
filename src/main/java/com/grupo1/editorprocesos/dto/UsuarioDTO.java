@@ -10,6 +10,6 @@ public class UsuarioDTO {
     private String email;
     private RolSistema rolSistema;
     private Boolean isActivo;
-    private Long empresaId;
+    private ReferenciaDTO empresa;
 }
 // DTO que representa la información de un usuario (id, email, rol del sistema, estado activo y empresa a la que pertenece)

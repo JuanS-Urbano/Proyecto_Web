@@ -22,7 +22,7 @@ import com.grupo1.editorprocesos.model.entity.core.Empresa;
 import com.grupo1.editorprocesos.model.entity.core.Pool;
 import com.grupo1.editorprocesos.model.entity.core.Usuario;
 import com.grupo1.editorprocesos.model.enums.RolSistema;
-import com.grupo1.editorprocesos.repository.EmpresaRepository;
+import com.grupo1.editorprocesos.service.EmpresaService;
 import com.grupo1.editorprocesos.repository.PoolRepository;
 import com.grupo1.editorprocesos.repository.ProcesoRepository;
 import com.grupo1.editorprocesos.repository.UsuarioRepository;
@@ -40,7 +40,7 @@ class PoolServiceImplTest {
     private ProcesoRepository procesoRepository;
 
     @Mock
-    private EmpresaRepository empresaRepository;
+    private EmpresaService empresaService;
 
     @Mock
     private UsuarioRepository usuarioRepository;
@@ -76,7 +76,7 @@ class PoolServiceImplTest {
     void crearPool_exitoso() {
         PoolDTO dto = new PoolDTO();
         dto.setNombre("Pool Test");
-        dto.setEmpresaId(1L);
+        dto.setEmpresa(new com.grupo1.editorprocesos.dto.ReferenciaDTO(1L, null));
 
         Pool pool = new Pool();
         pool.setId(5L);
@@ -86,22 +86,22 @@ class PoolServiceImplTest {
         PoolDTO resultado = new PoolDTO();
         resultado.setNombre("Pool Test");
 
-        when(empresaRepository.findById(1L)).thenReturn(Optional.of(empresa));
+        when(empresaService.obtenerEntityById(1L)).thenReturn(empresa);
         when(poolRepository.save(any(Pool.class))).thenReturn(pool);
         when(modelMapper.map(pool, PoolDTO.class)).thenReturn(resultado);
 
         PoolDTO result = poolService.crearPool(dto);
 
         assertThat(result.getNombre()).isEqualTo("Pool Test");
-        assertThat(result.getEmpresaId()).isEqualTo(1L);
+        assertThat(result.getEmpresa().getId()).isEqualTo(1L);
     }
 
     @Test
     void crearPool_empresaNoEncontrada() {
         PoolDTO dto = new PoolDTO();
-        dto.setEmpresaId(99L);
+        dto.setEmpresa(new com.grupo1.editorprocesos.dto.ReferenciaDTO(99L, null));
 
-        when(empresaRepository.findById(99L)).thenReturn(Optional.empty());
+        when(empresaService.obtenerEntityById(99L)).thenThrow(new com.grupo1.editorprocesos.exception.ResourceNotFoundException("Empresa no encontrada"));
 
         assertThatThrownBy(() -> poolService.crearPool(dto))
                 .isInstanceOf(ResourceNotFoundException.class);
@@ -112,9 +112,9 @@ class PoolServiceImplTest {
         usuario.setRolSistema(RolSistema.LECTOR);
 
         PoolDTO dto = new PoolDTO();
-        dto.setEmpresaId(1L);
+        dto.setEmpresa(new com.grupo1.editorprocesos.dto.ReferenciaDTO(1L, null));
 
-        when(empresaRepository.findById(1L)).thenReturn(Optional.of(empresa));
+        when(empresaService.obtenerEntityById(1L)).thenReturn(empresa);
 
         assertThatThrownBy(() -> poolService.crearPool(dto))
                 .isInstanceOf(UnauthorizedException.class)
@@ -129,7 +129,7 @@ class PoolServiceImplTest {
 
         PoolDTO dto1 = new PoolDTO();
 
-        when(empresaRepository.findById(1L)).thenReturn(Optional.of(empresa));
+        when(empresaService.obtenerEntityById(1L)).thenReturn(empresa);
         when(poolRepository.findByEmpresaId(1L)).thenReturn(List.of(pool1));
         when(modelMapper.map(pool1, PoolDTO.class)).thenReturn(dto1);
 
@@ -195,7 +195,7 @@ class PoolServiceImplTest {
 
     @Test
     void listarPoolsPorEmpresa_empresaNoEncontrada() {
-        when(empresaRepository.findById(99L)).thenReturn(Optional.empty());
+        when(empresaService.obtenerEntityById(99L)).thenThrow(new com.grupo1.editorprocesos.exception.ResourceNotFoundException("Empresa no encontrada"));
 
         assertThatThrownBy(() -> poolService.listarPoolsPorEmpresa(99L))
                 .isInstanceOf(ResourceNotFoundException.class);
@@ -207,7 +207,7 @@ class PoolServiceImplTest {
 
         PoolDTO dto = new PoolDTO();
         dto.setNombre("Pool Admin");
-        dto.setEmpresaId(1L);
+        dto.setEmpresa(new com.grupo1.editorprocesos.dto.ReferenciaDTO(1L, null));
 
         Pool pool = new Pool();
         pool.setId(10L);
@@ -217,7 +217,7 @@ class PoolServiceImplTest {
         PoolDTO resultado = new PoolDTO();
         resultado.setNombre("Pool Admin");
 
-        when(empresaRepository.findById(1L)).thenReturn(Optional.of(empresa));
+        when(empresaService.obtenerEntityById(1L)).thenReturn(empresa);
         when(poolRepository.save(any(Pool.class))).thenReturn(pool);
         when(modelMapper.map(pool, PoolDTO.class)).thenReturn(resultado);
 
@@ -233,9 +233,9 @@ class PoolServiceImplTest {
         usuario.setEmpresa(otraEmpresa);
 
         PoolDTO dto = new PoolDTO();
-        dto.setEmpresaId(1L);
+        dto.setEmpresa(new com.grupo1.editorprocesos.dto.ReferenciaDTO(1L, null));
 
-        when(empresaRepository.findById(1L)).thenReturn(Optional.of(empresa));
+        when(empresaService.obtenerEntityById(1L)).thenReturn(empresa);
 
         assertThatThrownBy(() -> poolService.crearPool(dto))
                 .isInstanceOf(UnauthorizedException.class)

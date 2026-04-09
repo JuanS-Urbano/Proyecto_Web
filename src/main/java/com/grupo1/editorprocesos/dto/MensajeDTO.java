@@ -21,11 +21,11 @@ public class MensajeDTO {
     private String correlationKey;
 
     /** Dev 1 (HU-25): Proceso que genera el THROW */
-    private Long procesoId;
+    private ReferenciaDTO proceso;
 
     /** Dev 1 (HU-25): Actividad origen del throw */
-    private Long actividadOrigenId;
+    private ReferenciaDTO actividadOrigen;
 
     /** Dev 2 (HU-27): Proceso destino del CATCH */
-    private Long procesoDestinoId;
+    private ReferenciaDTO procesoDestino;
 }

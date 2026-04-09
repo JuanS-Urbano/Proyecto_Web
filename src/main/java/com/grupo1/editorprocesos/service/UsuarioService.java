@@ -20,4 +20,14 @@ public interface UsuarioService {
      * @param emailContacto El correo que se usará como inicio de sesión
      */
     void crearAdminInicial(com.grupo1.editorprocesos.model.entity.core.Empresa empresa, String emailContacto);
+
+    /**
+     * Lista todos los usuarios pertenecientes a una empresa.
+     */
+    java.util.List<UsuarioDTO> listarUsuariosPorEmpresa(Long empresaId);
+
+    /**
+     * Cambia el rol de un usuario existente.
+     */
+    UsuarioDTO cambiarRol(Long usuarioId, com.grupo1.editorprocesos.model.enums.RolSistema nuevoRol);
 }

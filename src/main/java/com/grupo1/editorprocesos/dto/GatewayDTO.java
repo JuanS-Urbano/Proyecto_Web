@@ -13,5 +13,5 @@ public class GatewayDTO {
     private TipoGateway tipoGateway;
     private Double posicionX;
     private Double posicionY;
-    private Long procesoId;
+    private ReferenciaDTO proceso;
 }

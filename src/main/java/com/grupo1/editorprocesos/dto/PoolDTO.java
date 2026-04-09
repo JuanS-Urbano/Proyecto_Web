@@ -6,5 +6,5 @@ import lombok.Data;
 public class PoolDTO {
     private Long id;
     private String nombre;
-    private Long empresaId;
+    private ReferenciaDTO empresa;
 }

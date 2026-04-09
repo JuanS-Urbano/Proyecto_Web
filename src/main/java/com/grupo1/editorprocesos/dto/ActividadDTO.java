@@ -15,7 +15,7 @@ public class ActividadDTO {
     private TipoActividad tipoActividad;
     private Double posicionX;
     private Double posicionY;
-    private Long procesoId;
+    private ReferenciaDTO proceso;
 
     /**
      * ID del Lane al que pertenece esta actividad.
@@ -23,5 +23,5 @@ public class ActividadDTO {
      * al mismo proceso que la actividad. Si laneId es null, la actividad
      * queda sin asignar a un lane (válido en estado BORRADOR).
      */
-    private Long laneId;
+    private ReferenciaDTO lane;
 }

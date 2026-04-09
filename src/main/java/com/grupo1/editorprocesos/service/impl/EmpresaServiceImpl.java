@@ -61,4 +61,12 @@ public class EmpresaServiceImpl implements EmpresaService {
                 .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada con id: " + id));
         return modelMapper.map(empresa, EmpresaDTO.class);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Empresa obtenerEntityById(Long id) {
+        return empresaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Empresa no encontrada con id: " + id));
+    }
 }

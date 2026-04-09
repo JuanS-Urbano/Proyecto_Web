@@ -173,7 +173,7 @@ class UsuarioServiceImplTest {
 
         UsuarioDTO result = usuarioService.crearUsuario(createDTO);
 
-        assertThat(result.getEmpresaId()).isEqualTo(1L);
+        assertThat(result.getEmpresa().getId()).isEqualTo(1L);
         ArgumentCaptor<Usuario> captor = ArgumentCaptor.forClass(Usuario.class);
         verify(usuarioRepository).save(captor.capture());
         assertThat(captor.getValue().getEmpresa()).isEqualTo(empresa);

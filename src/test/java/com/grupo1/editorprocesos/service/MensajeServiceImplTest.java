@@ -13,7 +13,7 @@ import com.grupo1.editorprocesos.model.enums.EstadoMensaje;
 import com.grupo1.editorprocesos.model.enums.TipoMensaje;
 import com.grupo1.editorprocesos.repository.ActividadRepository;
 import com.grupo1.editorprocesos.repository.MensajeRepository;
-import com.grupo1.editorprocesos.repository.ProcesoRepository;
+import com.grupo1.editorprocesos.service.ProcesoService;
 import com.grupo1.editorprocesos.repository.UsuarioRepository;
 import com.grupo1.editorprocesos.service.impl.MensajeServiceImpl;
 import jakarta.servlet.http.HttpServletRequest;
@@ -40,7 +40,7 @@ class MensajeServiceImplTest {
     private MensajeRepository mensajeRepository;
 
     @Mock
-    private ProcesoRepository procesoRepository;
+    private ProcesoService procesoService;
 
     @Mock
     private ActividadRepository actividadRepository;
@@ -88,7 +88,7 @@ class MensajeServiceImplTest {
 
     @Test
     void throwMessage_exitoso_sinPayload() {
-        when(procesoRepository.findById(proceso.getId())).thenReturn(Optional.of(proceso));
+        when(procesoService.obtenerEntityById(proceso.getId())).thenReturn(proceso);
 
         Mensaje guardado = new Mensaje();
         guardado.setId(1L);
@@ -100,7 +100,7 @@ class MensajeServiceImplTest {
 
         MensajeDTO dto = new MensajeDTO();
         dto.setNombre("Orden Aprobada");
-        dto.setProcesoId(proceso.getId());
+        dto.setProceso(new com.grupo1.editorprocesos.dto.ReferenciaDTO(proceso.getId(), null));
 
         MensajeDTO result = mensajeService.throwMessage(dto);
 
@@ -108,12 +108,12 @@ class MensajeServiceImplTest {
         assertThat(result.getNombre()).isEqualTo("Orden Aprobada");
         assertThat(result.getTipo()).isEqualTo(TipoMensaje.THROW);
         assertThat(result.getEstado()).isEqualTo(EstadoMensaje.PENDIENTE);
-        assertThat(result.getProcesoId()).isEqualTo(proceso.getId());
+        assertThat(result.getProceso().getId()).isEqualTo(proceso.getId());
     }
 
     @Test
     void throwMessage_conPayloadJSON_valido() {
-        when(procesoRepository.findById(proceso.getId())).thenReturn(Optional.of(proceso));
+        when(procesoService.obtenerEntityById(proceso.getId())).thenReturn(proceso);
 
         String jsonPayload = "{\"orderId\": 123, \"total\": 500.00}";
 
@@ -129,7 +129,7 @@ class MensajeServiceImplTest {
         MensajeDTO dto = new MensajeDTO();
         dto.setNombre("Pago Procesado");
         dto.setPayloadJson(jsonPayload);
-        dto.setProcesoId(proceso.getId());
+        dto.setProceso(new com.grupo1.editorprocesos.dto.ReferenciaDTO(proceso.getId(), null));
 
         MensajeDTO result = mensajeService.throwMessage(dto);
 
@@ -138,12 +138,12 @@ class MensajeServiceImplTest {
 
     @Test
     void throwMessage_conPayloadJSON_invalido_falla() {
-        when(procesoRepository.findById(proceso.getId())).thenReturn(Optional.of(proceso));
+        when(procesoService.obtenerEntityById(proceso.getId())).thenReturn(proceso);
 
         MensajeDTO dto = new MensajeDTO();
         dto.setNombre("Mensaje Malo");
         dto.setPayloadJson("esto no es json");
-        dto.setProcesoId(proceso.getId());
+        dto.setProceso(new com.grupo1.editorprocesos.dto.ReferenciaDTO(proceso.getId(), null));
 
         assertThatThrownBy(() -> mensajeService.throwMessage(dto))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -152,11 +152,11 @@ class MensajeServiceImplTest {
 
     @Test
     void throwMessage_procesoNoExiste_falla() {
-        when(procesoRepository.findById(999L)).thenReturn(Optional.empty());
+        when(procesoService.obtenerEntityById(999L)).thenThrow(new ResourceNotFoundException("Proceso no encontrado"));
 
         MensajeDTO dto = new MensajeDTO();
         dto.setNombre("Mensaje");
-        dto.setProcesoId(999L);
+        dto.setProceso(new com.grupo1.editorprocesos.dto.ReferenciaDTO(999L, null));
 
         assertThatThrownBy(() -> mensajeService.throwMessage(dto))
                 .isInstanceOf(ResourceNotFoundException.class)
@@ -166,11 +166,11 @@ class MensajeServiceImplTest {
     @Test
     void throwMessage_sinHeaderUsuario_falla() {
         when(httpServletRequest.getHeader("X-User-Email")).thenReturn(null);
-        when(procesoRepository.findById(proceso.getId())).thenReturn(Optional.of(proceso));
+        when(procesoService.obtenerEntityById(proceso.getId())).thenReturn(proceso);
 
         MensajeDTO dto = new MensajeDTO();
         dto.setNombre("Mensaje");
-        dto.setProcesoId(proceso.getId());
+        dto.setProceso(new com.grupo1.editorprocesos.dto.ReferenciaDTO(proceso.getId(), null));
 
         assertThatThrownBy(() -> mensajeService.throwMessage(dto))
                 .isInstanceOf(UnauthorizedException.class);
@@ -180,7 +180,7 @@ class MensajeServiceImplTest {
     void throwMessage_nombreVacio_falla() {
         MensajeDTO dto = new MensajeDTO();
         dto.setNombre("");
-        dto.setProcesoId(proceso.getId());
+        dto.setProceso(new com.grupo1.editorprocesos.dto.ReferenciaDTO(proceso.getId(), null));
 
         assertThatThrownBy(() -> mensajeService.throwMessage(dto))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -189,7 +189,7 @@ class MensajeServiceImplTest {
 
     @Test
     void throwMessage_conActividadOrigen_exitoso() {
-        when(procesoRepository.findById(proceso.getId())).thenReturn(Optional.of(proceso));
+        when(procesoService.obtenerEntityById(proceso.getId())).thenReturn(proceso);
 
         Actividad actividad = new Actividad();
         actividad.setId(5L);
@@ -207,17 +207,17 @@ class MensajeServiceImplTest {
 
         MensajeDTO dto = new MensajeDTO();
         dto.setNombre("Notificación");
-        dto.setProcesoId(proceso.getId());
-        dto.setActividadOrigenId(5L);
+        dto.setProceso(new com.grupo1.editorprocesos.dto.ReferenciaDTO(proceso.getId(), null));
+        dto.setActividadOrigen(new com.grupo1.editorprocesos.dto.ReferenciaDTO(5L, null));
 
         MensajeDTO result = mensajeService.throwMessage(dto);
 
-        assertThat(result.getActividadOrigenId()).isEqualTo(5L);
+        assertThat(result.getActividadOrigen().getId()).isEqualTo(5L);
     }
 
     @Test
     void throwMessage_conActividadDeOtroProceso_falla() {
-        when(procesoRepository.findById(proceso.getId())).thenReturn(Optional.of(proceso));
+        when(procesoService.obtenerEntityById(proceso.getId())).thenReturn(proceso);
 
         Proceso otroProceso = new Proceso();
         otroProceso.setId(999L);
@@ -229,8 +229,8 @@ class MensajeServiceImplTest {
 
         MensajeDTO dto = new MensajeDTO();
         dto.setNombre("Notificación");
-        dto.setProcesoId(proceso.getId());
-        dto.setActividadOrigenId(5L);
+        dto.setProceso(new com.grupo1.editorprocesos.dto.ReferenciaDTO(proceso.getId(), null));
+        dto.setActividadOrigen(new com.grupo1.editorprocesos.dto.ReferenciaDTO(5L, null));
 
         assertThatThrownBy(() -> mensajeService.throwMessage(dto))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -243,7 +243,7 @@ class MensajeServiceImplTest {
 
     @Test
     void listarMensajesPorProceso_exitoso() {
-        when(procesoRepository.findById(proceso.getId())).thenReturn(Optional.of(proceso));
+        when(procesoService.obtenerEntityById(proceso.getId())).thenReturn(proceso);
 
         Mensaje m1 = new Mensaje();
         m1.setId(1L);
