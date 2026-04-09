@@ -24,8 +24,6 @@ import com.grupo1.editorprocesos.model.entity.process.Lane;
 import com.grupo1.editorprocesos.model.entity.process.Proceso;
 import com.grupo1.editorprocesos.model.entity.process.RolProceso;
 import com.grupo1.editorprocesos.repository.LaneRepository;
-import com.grupo1.editorprocesos.service.ProcesoService;
-import com.grupo1.editorprocesos.service.RolProcesoService;
 import com.grupo1.editorprocesos.repository.UsuarioRepository;
 import com.grupo1.editorprocesos.service.impl.LaneServiceImpl;
 

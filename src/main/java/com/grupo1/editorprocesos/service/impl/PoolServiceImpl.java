@@ -24,6 +24,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PoolServiceImpl implements PoolService {
 
+    private static final String POOL_NO_ENCONTRADO_CON_ID = "Pool no encontrado con id: ";
+
     private final PoolRepository poolRepository;
     private final ProcesoRepository procesoRepository;
     private final EmpresaService empresaService;
@@ -80,7 +82,7 @@ public class PoolServiceImpl implements PoolService {
     public PoolDTO editarPool(Long id, PoolDTO poolDTO) {
         Pool pool = poolRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Pool no encontrado con id: " + id));
+                POOL_NO_ENCONTRADO_CON_ID + id));
 
         Usuario usuario = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuario, pool.getEmpresa());
@@ -105,7 +107,7 @@ public class PoolServiceImpl implements PoolService {
     public void eliminarPool(Long id) {
         Pool pool = poolRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Pool no encontrado con id: " + id));
+                POOL_NO_ENCONTRADO_CON_ID + id));
 
         Usuario usuario = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuario, pool.getEmpresa());
@@ -148,6 +150,6 @@ public class PoolServiceImpl implements PoolService {
     public Pool obtenerEntityById(Long id) {
         return poolRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Pool no encontrado con id: " + id));
+                        POOL_NO_ENCONTRADO_CON_ID + id));
     }
 }

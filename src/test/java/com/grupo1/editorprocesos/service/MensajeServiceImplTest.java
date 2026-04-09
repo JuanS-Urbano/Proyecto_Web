@@ -1,6 +1,7 @@
 package com.grupo1.editorprocesos.service;
 
 import com.grupo1.editorprocesos.dto.MensajeDTO;
+import com.grupo1.editorprocesos.exception.MensajeCatchException;
 import com.grupo1.editorprocesos.exception.ResourceNotFoundException;
 import com.grupo1.editorprocesos.exception.UnauthorizedException;
 import com.grupo1.editorprocesos.model.entity.bpmn.Actividad;
@@ -13,7 +14,6 @@ import com.grupo1.editorprocesos.model.enums.EstadoMensaje;
 import com.grupo1.editorprocesos.model.enums.TipoMensaje;
 import com.grupo1.editorprocesos.repository.ActividadRepository;
 import com.grupo1.editorprocesos.repository.MensajeRepository;
-import com.grupo1.editorprocesos.service.ProcesoService;
 import com.grupo1.editorprocesos.repository.UsuarioRepository;
 import com.grupo1.editorprocesos.service.impl.MensajeServiceImpl;
 import jakarta.servlet.http.HttpServletRequest;
@@ -292,4 +292,173 @@ class MensajeServiceImplTest {
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Mensaje no encontrado");
     }
+
+        @Test
+        void throwMessage_actividadOrigenNoExiste_falla() {
+        when(procesoService.obtenerEntityById(proceso.getId())).thenReturn(proceso);
+        when(actividadRepository.findById(123L)).thenReturn(Optional.empty());
+
+        MensajeDTO dto = new MensajeDTO();
+        dto.setNombre("Notificación");
+        dto.setProceso(new com.grupo1.editorprocesos.dto.ReferenciaDTO(proceso.getId(), null));
+        dto.setActividadOrigen(new com.grupo1.editorprocesos.dto.ReferenciaDTO(123L, null));
+
+        assertThatThrownBy(() -> mensajeService.throwMessage(dto))
+            .isInstanceOf(ResourceNotFoundException.class)
+            .hasMessageContaining("Actividad origen no encontrada");
+        }
+
+        @Test
+        void catchMessage_exitoso_conProcesoOrigen() {
+        Proceso destino = new Proceso();
+        destino.setId(20L);
+        destino.setPool(pool);
+
+        Proceso origen = new Proceso();
+        origen.setId(21L);
+        origen.setPool(pool);
+
+        MensajeDTO dto = new MensajeDTO();
+        dto.setNombre("MsgCatch");
+        dto.setCorrelationKey("ORD-1");
+        dto.setProcesoDestino(new com.grupo1.editorprocesos.dto.ReferenciaDTO(20L, null));
+        dto.setProceso(new com.grupo1.editorprocesos.dto.ReferenciaDTO(21L, null));
+
+        Mensaje guardado = new Mensaje();
+        guardado.setId(10L);
+        guardado.setNombre("MsgCatch");
+        guardado.setTipo(TipoMensaje.CATCH);
+        guardado.setEstado(EstadoMensaje.PENDIENTE);
+        guardado.setProceso(origen);
+        guardado.setProcesoDestinoId(20L);
+
+        when(procesoService.obtenerEntityById(20L)).thenReturn(destino);
+        when(procesoService.obtenerEntityById(21L)).thenReturn(origen);
+        when(mensajeRepository.existsByNombreAndTipoAndProcesoDestinoId("MsgCatch", TipoMensaje.CATCH, 20L)).thenReturn(false);
+        when(mensajeRepository.save(any(Mensaje.class))).thenReturn(guardado);
+
+        MensajeDTO result = mensajeService.catchMessage(dto);
+
+        assertThat(result.getId()).isEqualTo(10L);
+        assertThat(result.getProcesoDestino().getId()).isEqualTo(20L);
+        assertThat(result.getTipo()).isEqualTo(TipoMensaje.CATCH);
+        }
+
+        @Test
+        void catchMessage_duplicado_falla() {
+        MensajeDTO dto = new MensajeDTO();
+        dto.setNombre("MsgCatch");
+        dto.setProcesoDestino(new com.grupo1.editorprocesos.dto.ReferenciaDTO(20L, null));
+
+        when(procesoService.obtenerEntityById(20L)).thenReturn(proceso);
+        when(mensajeRepository.existsByNombreAndTipoAndProcesoDestinoId("MsgCatch", TipoMensaje.CATCH, 20L)).thenReturn(true);
+
+        assertThatThrownBy(() -> mensajeService.catchMessage(dto))
+            .isInstanceOf(MensajeCatchException.class)
+            .hasMessageContaining("Ya existe un mensaje CATCH");
+        }
+
+        @Test
+        void correlateMessages_exitoso() {
+        Mensaje throwMsg = new Mensaje();
+        throwMsg.setId(1L);
+        throwMsg.setNombre("T");
+        throwMsg.setTipo(TipoMensaje.THROW);
+        throwMsg.setEstado(EstadoMensaje.PENDIENTE);
+        throwMsg.setPayloadJson("{\"x\":1}");
+        throwMsg.setCorrelationKey("K1");
+        throwMsg.setProceso(proceso);
+
+        Mensaje catchMsg = new Mensaje();
+        catchMsg.setId(2L);
+        catchMsg.setNombre("C");
+        catchMsg.setTipo(TipoMensaje.CATCH);
+        catchMsg.setEstado(EstadoMensaje.PENDIENTE);
+        catchMsg.setCorrelationKey("K1");
+        catchMsg.setProceso(proceso);
+        catchMsg.setProcesoDestinoId(proceso.getId());
+
+        when(mensajeRepository.findFirstByCorrelationKeyAndTipoAndEstado("K1", TipoMensaje.THROW, EstadoMensaje.PENDIENTE))
+            .thenReturn(Optional.of(throwMsg));
+        when(mensajeRepository.findFirstByCorrelationKeyAndTipoAndEstado("K1", TipoMensaje.CATCH, EstadoMensaje.PENDIENTE))
+            .thenReturn(Optional.of(catchMsg));
+        when(mensajeRepository.save(any(Mensaje.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        com.grupo1.editorprocesos.dto.CorrelacionResultDTO result = mensajeService.correlateMessages("K1");
+
+        assertThat(result.isCorrelacionExitosa()).isTrue();
+        assertThat(result.getThrowMensaje().getEstado()).isEqualTo(EstadoMensaje.ENTREGADO);
+        assertThat(result.getCatchMensaje().getEstado()).isEqualTo(EstadoMensaje.ENTREGADO);
+        assertThat(result.getCatchMensaje().getPayloadJson()).isEqualTo("{\"x\":1}");
+        }
+
+        @Test
+        void correlateMessages_sinThrow_falla() {
+        when(mensajeRepository.findFirstByCorrelationKeyAndTipoAndEstado("K2", TipoMensaje.THROW, EstadoMensaje.PENDIENTE))
+            .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> mensajeService.correlateMessages("K2"))
+            .isInstanceOf(ResourceNotFoundException.class)
+            .hasMessageContaining("THROW pendiente");
+        }
+
+        @Test
+        void correlateMessages_sinCatch_falla() {
+        Mensaje throwMsg = new Mensaje();
+        throwMsg.setId(1L);
+        throwMsg.setTipo(TipoMensaje.THROW);
+        throwMsg.setEstado(EstadoMensaje.PENDIENTE);
+
+        when(mensajeRepository.findFirstByCorrelationKeyAndTipoAndEstado("K3", TipoMensaje.THROW, EstadoMensaje.PENDIENTE))
+            .thenReturn(Optional.of(throwMsg));
+        when(mensajeRepository.findFirstByCorrelationKeyAndTipoAndEstado("K3", TipoMensaje.CATCH, EstadoMensaje.PENDIENTE))
+            .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> mensajeService.correlateMessages("K3"))
+            .isInstanceOf(ResourceNotFoundException.class)
+            .hasMessageContaining("CATCH pendiente");
+        }
+
+        @Test
+        void buscarPorCorrelationKey_exitoso() {
+        Mensaje mensaje = new Mensaje();
+        mensaje.setId(7L);
+        mensaje.setNombre("M");
+        mensaje.setCorrelationKey("ABC");
+        mensaje.setProceso(proceso);
+
+        when(mensajeRepository.findByCorrelationKey("ABC")).thenReturn(List.of(mensaje));
+
+        List<MensajeDTO> result = mensajeService.buscarPorCorrelationKey("ABC");
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getCorrelationKey()).isEqualTo("ABC");
+        }
+
+        @Test
+        void buscarPorCorrelationKey_vacio_falla() {
+        assertThatThrownBy(() -> mensajeService.buscarPorCorrelationKey(" "))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("correlationKey es requerido");
+        }
+
+        @Test
+        void listarMensajesPorProceso_usuarioSinAcceso_falla() {
+        Empresa otraEmpresa = new Empresa();
+        otraEmpresa.setId(99L);
+
+        Usuario usuarioOtro = new Usuario();
+        usuarioOtro.setId(100L);
+        usuarioOtro.setEmail("otro@empresa.com");
+        usuarioOtro.setEmpresa(otraEmpresa);
+
+        when(httpServletRequest.getHeader("X-User-Email")).thenReturn("otro@empresa.com");
+        when(usuarioRepository.findByEmail("otro@empresa.com")).thenReturn(Optional.of(usuarioOtro));
+        Long procesoId = proceso.getId();
+        when(procesoService.obtenerEntityById(procesoId)).thenReturn(proceso);
+
+        assertThatThrownBy(() -> mensajeService.listarMensajesPorProceso(procesoId))
+            .isInstanceOf(UnauthorizedException.class)
+            .hasMessageContaining("no tiene acceso");
+        }
 }

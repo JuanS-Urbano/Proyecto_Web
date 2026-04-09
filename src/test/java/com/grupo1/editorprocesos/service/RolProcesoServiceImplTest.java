@@ -21,7 +21,6 @@ import com.grupo1.editorprocesos.exception.ResourceNotFoundException;
 import com.grupo1.editorprocesos.model.entity.core.Empresa;
 import com.grupo1.editorprocesos.model.entity.process.RolProceso;
 import com.grupo1.editorprocesos.repository.ActividadRepository;
-import com.grupo1.editorprocesos.service.EmpresaService;
 import com.grupo1.editorprocesos.repository.RolProcesoRepository;
 import com.grupo1.editorprocesos.service.impl.RolProcesoServiceImpl;
 
