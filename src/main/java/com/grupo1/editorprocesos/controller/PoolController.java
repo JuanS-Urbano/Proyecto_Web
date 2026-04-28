@@ -24,6 +24,12 @@ public class PoolController {
                 .body(new ApiResponse<>(true, "Pool creado exitosamente", creado));
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<PoolDTO>> obtenerPool(@PathVariable Long id) {
+        PoolDTO pool = poolService.obtenerPoolPorId(id);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Pool obtenido exitosamente", pool));
+    }
+
     @GetMapping("/empresa/{empresaId}")
     public ResponseEntity<ApiResponse<List<PoolDTO>>> listarPoolsPorEmpresa(@PathVariable Long empresaId) {
         List<PoolDTO> pools = poolService.listarPoolsPorEmpresa(empresaId);

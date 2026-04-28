@@ -47,22 +47,3 @@ spec:
     - protocol: TCP
       port: 8080
       targetPort: 8080
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-   name: editorprocesos
-   namespace: grupo23
-spec:
-   ingressClassName: public
-   rules:
-   - host: grupo23.inphotech.co
-     http:
-       paths:
-       - path: /
-         pathType: Prefix
-         backend:
-           service:
-             name: editorprocesos
-             port:
-               number: 8080
