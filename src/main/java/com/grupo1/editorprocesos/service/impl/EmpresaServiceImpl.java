@@ -38,11 +38,13 @@ public class EmpresaServiceImpl implements EmpresaService {
 
         // =====================================================================================
         // Integración HU-02: Generar el usuario administrador al crear la empresa.
-        usuarioService.crearAdminInicial(empresa, empresaDTO.getCorreoContacto());
+        String passwordAdmin = usuarioService.crearAdminInicial(empresa, empresaDTO.getCorreoContacto());
         // =====================================================================================
 
-        // 4. Retornar DTO guardado con su ID generado
-        return modelMapper.map(empresa, EmpresaDTO.class);
+        // 4. Retornar DTO guardado con su ID generado e incluir credenciales del admin inicial
+        EmpresaDTO resultado = modelMapper.map(empresa, EmpresaDTO.class);
+        resultado.setPasswordInicialAdmin(passwordAdmin);
+        return resultado;
     }
 
     @Override

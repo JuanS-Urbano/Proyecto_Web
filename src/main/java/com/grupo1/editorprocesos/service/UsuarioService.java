@@ -18,8 +18,9 @@ public interface UsuarioService {
      *
      * @param empresa       La empresa a la que pertenece el administrador
      * @param emailContacto El correo que se usará como inicio de sesión
+     * @return              La contraseña en texto plano generada para el admin inicial
      */
-    void crearAdminInicial(com.grupo1.editorprocesos.model.entity.core.Empresa empresa, String emailContacto);
+    String crearAdminInicial(com.grupo1.editorprocesos.model.entity.core.Empresa empresa, String emailContacto);
 
     /**
      * Lista todos los usuarios pertenecientes a una empresa.

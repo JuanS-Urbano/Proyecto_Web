@@ -8,4 +8,5 @@ public class EmpresaDTO {
     private String nit;
     private String nombre;
     private String correoContacto;
+    private String passwordInicialAdmin;
 }

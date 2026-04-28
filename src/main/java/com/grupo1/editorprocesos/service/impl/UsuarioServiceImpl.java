@@ -61,10 +61,13 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     @Override
     @Transactional
-    public void crearAdminInicial(Empresa empresa, String emailContacto) {
-        // Generar una contraseña aleatoria segura para el admin inicial.
-        // En producción, esta contraseña debe ser comunicada al administrador
-        // o se debe implementar un flujo de reseteo de contraseña.
+    public String crearAdminInicial(Empresa empresa, String emailContacto) {
+        if (usuarioRepository.findByEmail(emailContacto).isPresent()) {
+            throw new DuplicateResourceException(
+                    "El correo de contacto ya está registrado como usuario: " + emailContacto
+                    + ". Use un correo distinto para la empresa.");
+        }
+
         String generatedPassword = java.util.UUID.randomUUID().toString();
 
         Usuario admin = new Usuario();
@@ -75,6 +78,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         admin.setIsActivo(true);
 
         usuarioRepository.save(admin);
+        return generatedPassword;
     }
     
     @Override
