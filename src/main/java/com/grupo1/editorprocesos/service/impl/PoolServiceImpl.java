@@ -147,6 +147,17 @@ public class PoolServiceImpl implements PoolService {
 
     @Override
     @Transactional(readOnly = true)
+    public PoolDTO obtenerPoolPorId(Long id) {
+        Pool pool = poolRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        POOL_NO_ENCONTRADO_CON_ID + id));
+        PoolDTO resultado = modelMapper.map(pool, PoolDTO.class);
+        resultado.setEmpresa(new com.grupo1.editorprocesos.dto.ReferenciaDTO(pool.getEmpresa().getId(), pool.getEmpresa().getNombre()));
+        return resultado;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Pool obtenerEntityById(Long id) {
         return poolRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(

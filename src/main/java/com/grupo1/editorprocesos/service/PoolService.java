@@ -13,6 +13,8 @@ public interface PoolService {
 
     void eliminarPool(Long id);
 
+    PoolDTO obtenerPoolPorId(Long id);
+
     /**
      * Devuelve la entidad Pool. Método interno para ser usado por otros servicios.
      */
