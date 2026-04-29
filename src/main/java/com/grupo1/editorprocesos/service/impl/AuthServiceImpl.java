@@ -33,7 +33,8 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // 3. Validar contraseña con BCrypt
-        if (!passwordEncoder.matches(request.getPassword(), usuario.getPassword())) {
+        String rawPassword = request.getPassword() != null ? request.getPassword().trim() : "";
+        if (!passwordEncoder.matches(rawPassword, usuario.getPassword())) {
             throw new UnauthorizedException("Credenciales inválidas");
         }
 

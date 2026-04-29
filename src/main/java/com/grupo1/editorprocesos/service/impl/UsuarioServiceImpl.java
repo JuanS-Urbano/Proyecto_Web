@@ -68,7 +68,7 @@ public class UsuarioServiceImpl implements UsuarioService {
                     + ". Use un correo distinto para la empresa.");
         }
 
-        String generatedPassword = java.util.UUID.randomUUID().toString();
+        String generatedPassword = java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 12);
 
         Usuario admin = new Usuario();
         admin.setEmail(emailContacto);
