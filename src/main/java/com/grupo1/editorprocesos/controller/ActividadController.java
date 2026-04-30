@@ -75,4 +75,4 @@ public class ActividadController {
                 "Actividad eliminada exitosamente. Los arcos conectados fueron saneados.", null));
     }
 }
-   }
+   
