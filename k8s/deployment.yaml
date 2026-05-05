@@ -4,7 +4,7 @@ metadata:
   name: editorprocesos
   namespace: grupo23
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: editorprocesos
