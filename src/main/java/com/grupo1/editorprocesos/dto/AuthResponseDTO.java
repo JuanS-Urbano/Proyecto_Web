@@ -9,4 +9,5 @@ public class AuthResponseDTO {
     private String email;
     private String rolSistema;
     private ReferenciaDTO empresa;
+    private Long poolId;
 }

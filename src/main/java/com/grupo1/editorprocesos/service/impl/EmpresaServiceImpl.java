@@ -4,7 +4,9 @@ import com.grupo1.editorprocesos.dto.EmpresaDTO;
 import com.grupo1.editorprocesos.exception.DuplicateResourceException;
 import com.grupo1.editorprocesos.exception.ResourceNotFoundException;
 import com.grupo1.editorprocesos.model.entity.core.Empresa;
+import com.grupo1.editorprocesos.model.entity.core.Pool;
 import com.grupo1.editorprocesos.repository.EmpresaRepository;
+import com.grupo1.editorprocesos.repository.PoolRepository;
 import com.grupo1.editorprocesos.service.EmpresaService;
 import com.grupo1.editorprocesos.service.UsuarioService;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,7 @@ public class EmpresaServiceImpl implements EmpresaService {
     private final EmpresaRepository empresaRepository;
     private final ModelMapper modelMapper;
     private final UsuarioService usuarioService;
+    private final PoolRepository poolRepository;
 
     @Override
     @Transactional
@@ -36,10 +39,14 @@ public class EmpresaServiceImpl implements EmpresaService {
         // 3. Guardar la empresa en la base de datos
         empresa = empresaRepository.save(empresa);
 
-        // =====================================================================================
         // Integración HU-02: Generar el usuario administrador al crear la empresa.
         String passwordAdmin = usuarioService.crearAdminInicial(empresa, empresaDTO.getCorreoContacto());
-        // =====================================================================================
+
+        // HU-21: Crear pool principal automáticamente para la empresa
+        Pool poolPrincipal = new Pool();
+        poolPrincipal.setNombre("Pool Principal - " + empresa.getNombre());
+        poolPrincipal.setEmpresa(empresa);
+        poolRepository.save(poolPrincipal);
 
         // 4. Retornar DTO guardado con su ID generado e incluir credenciales del admin inicial
         EmpresaDTO resultado = modelMapper.map(empresa, EmpresaDTO.class);

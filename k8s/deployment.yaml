@@ -27,6 +27,8 @@ spec:
           value: "grupo23_user"
         - name: SPRING_DATASOURCE_PASSWORD
           value: "G23!Rt9$Qx3@Lm6#Vz8P"
+        - name: JWT_SECRET
+          value: "G3d!P9rXqZ#2mK7vNs8eYwQ4tL6bJcAhU0iF5oRxCpWaDnMkTjE1yuBzlHsIVfOg"
         resources:
           requests:
             memory: "256Mi"
