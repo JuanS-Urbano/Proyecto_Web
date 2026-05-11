@@ -21,8 +21,9 @@ public interface ProcesoRepository extends JpaRepository<Proceso, Long> {
     @Query("""
         SELECT p
         FROM Proceso p
-        WHERE p.pool.empresa.id = :empresaId
-           OR (:incluirCompartidos = true AND p.configuracionCompartido = true)
+        WHERE (p.pool.empresa.id = :empresaId
+           OR (:incluirCompartidos = true AND p.configuracionCompartido = true))
+          AND p.estado <> com.grupo1.editorprocesos.model.enums.EstadoProceso.INACTIVO
         """)
     List<Proceso> buscarVisiblesPorEmpresa(@Param("empresaId") Long empresaId,
                        @Param("incluirCompartidos") boolean incluirCompartidos);
@@ -30,8 +31,9 @@ public interface ProcesoRepository extends JpaRepository<Proceso, Long> {
     @Query("""
         SELECT p
         FROM Proceso p
-        WHERE p.pool.id = :poolId
-           OR (:incluirCompartidos = true AND p.configuracionCompartido = true)
+        WHERE (p.pool.id = :poolId
+           OR (:incluirCompartidos = true AND p.configuracionCompartido = true))
+          AND p.estado <> com.grupo1.editorprocesos.model.enums.EstadoProceso.INACTIVO
         """)
     List<Proceso> buscarVisiblesPorPool(@Param("poolId") Long poolId,
                     @Param("incluirCompartidos") boolean incluirCompartidos);
