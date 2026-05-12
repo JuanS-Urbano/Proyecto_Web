@@ -8,7 +8,11 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "procesos")
+@Table(name = "procesos", indexes = {
+        @Index(name = "idx_proceso_pool", columnList = "pool_id"),
+        @Index(name = "idx_proceso_estado", columnList = "estado"),
+        @Index(name = "idx_proceso_nombre", columnList = "nombre")
+})
 @Getter
 @Setter
 public class Proceso extends AuditableEntity {

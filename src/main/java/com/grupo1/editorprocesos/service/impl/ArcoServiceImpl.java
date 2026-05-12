@@ -237,24 +237,23 @@ public class ArcoServiceImpl implements ArcoService {
         }
     }
 
-    /**
-     * Valida que un elemento con el nombre dado exista dentro del proceso especificado.
-     * Los elementos pueden ser Actividades o Gateways.
-     */
-    private void validarElementoExisteEnProceso(String elementoNombre, Long procesoId) {
-        // Verificar si es una Actividad
-        boolean existeActividad = actividadRepository.findByNombreAndProcesoId(elementoNombre, procesoId).isPresent();
+    private void validarElementoExisteEnProceso(String elementoId, Long procesoId) {
+        try {
+            Long id = Long.parseLong(elementoId);
+            boolean existeActividad = actividadRepository.findById(id)
+                    .filter(a -> a.getProceso() != null && procesoId.equals(a.getProceso().getId()))
+                    .isPresent();
+            if (existeActividad) return;
 
-        if (existeActividad) {
-            return;
-        }
-
-        // Verificar si es un Gateway
-        boolean existeGateway = gatewayRepository.findByNombreAndProcesoId(elementoNombre, procesoId).isPresent();
-
-        if (!existeGateway) {
-            throw new IllegalArgumentException(
-                    "Elemento con nombre '" + elementoNombre + "' no encontrado en el proceso con ID: " + procesoId);
+            boolean existeGateway = gatewayRepository.findById(id)
+                    .filter(g -> g.getProceso() != null && procesoId.equals(g.getProceso().getId()))
+                    .isPresent();
+            if (!existeGateway) {
+                throw new IllegalArgumentException(
+                        "Elemento con ID '" + elementoId + "' no encontrado en el proceso con ID: " + procesoId);
+            }
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("ID de elemento inválido: " + elementoId);
         }
     }
 }

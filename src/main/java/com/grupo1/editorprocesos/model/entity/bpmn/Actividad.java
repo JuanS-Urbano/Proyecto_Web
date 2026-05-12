@@ -7,7 +7,10 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "actividades")
+@Table(name = "actividades", indexes = {
+        @Index(name = "idx_actividad_proceso", columnList = "proceso_id"),
+        @Index(name = "idx_actividad_lane", columnList = "lane_id")
+})
 @Getter
 @Setter
 public class Actividad extends ElementoBpmn {

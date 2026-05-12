@@ -5,6 +5,7 @@ import com.grupo1.editorprocesos.dto.HistorialCambiosDTO;
 import com.grupo1.editorprocesos.dto.ProcesoDTO;
 import com.grupo1.editorprocesos.model.enums.EstadoProceso;
 import com.grupo1.editorprocesos.service.ProcesoService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +21,7 @@ public class ProcesoController {
     private final ProcesoService procesoService;
 
     @PostMapping
-    public ResponseEntity<ApiResponse<ProcesoDTO>> crearProceso(@RequestBody ProcesoDTO procesoDTO) {
+    public ResponseEntity<ApiResponse<ProcesoDTO>> crearProceso(@Valid @RequestBody ProcesoDTO procesoDTO) {
         ProcesoDTO resultado = procesoService.crearProceso(procesoDTO);
         ApiResponse<ProcesoDTO> response = new ApiResponse<>(true, "Proceso creado exitosamente", resultado);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -87,7 +88,7 @@ public class ProcesoController {
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<ProcesoDTO>> editarProceso(
             @PathVariable Long id,
-            @RequestBody ProcesoDTO procesoDTO) {
+            @Valid @RequestBody ProcesoDTO procesoDTO) {
         ProcesoDTO resultado = procesoService.editarProceso(id, procesoDTO);
         ApiResponse<ProcesoDTO> response = new ApiResponse<>(true, "Proceso actualizado exitosamente", resultado);
         return ResponseEntity.ok(response);

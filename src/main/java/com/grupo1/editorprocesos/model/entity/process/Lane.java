@@ -8,6 +8,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -15,7 +16,10 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "lanes")
+@Table(name = "lanes", indexes = {
+        @Index(name = "idx_lane_proceso", columnList = "proceso_id"),
+        @Index(name = "idx_lane_rol_proceso", columnList = "rol_proceso_id")
+})
 @Getter
 @Setter
 public class Lane extends AuditableEntity {

@@ -3,6 +3,7 @@ package com.grupo1.editorprocesos.controller;
 import com.grupo1.editorprocesos.dto.ApiResponse;
 import com.grupo1.editorprocesos.dto.ArcoDTO;
 import com.grupo1.editorprocesos.service.ArcoService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +23,7 @@ public class ArcoController {
      * Body requerido: origenId, destinoId, procesoId.
      */
     @PostMapping
-    public ResponseEntity<ApiResponse<ArcoDTO>> crearArco(@RequestBody ArcoDTO arcoDTO) {
+    public ResponseEntity<ApiResponse<ArcoDTO>> crearArco(@Valid @RequestBody ArcoDTO arcoDTO) {
         ArcoDTO creado = arcoService.crearArco(arcoDTO);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ApiResponse<>(true, "Arco creado exitosamente", creado));
@@ -35,7 +36,7 @@ public class ArcoController {
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<ArcoDTO>> editarArco(
             @PathVariable Long id,
-            @RequestBody ArcoDTO arcoDTO) {
+            @Valid @RequestBody ArcoDTO arcoDTO) {
         ArcoDTO actualizado = arcoService.editarArco(id, arcoDTO);
         return ResponseEntity.ok(new ApiResponse<>(true, "Arco actualizado exitosamente", actualizado));
     }

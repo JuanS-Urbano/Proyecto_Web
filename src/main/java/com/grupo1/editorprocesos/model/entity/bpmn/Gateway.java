@@ -6,7 +6,9 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "gateways")
+@Table(name = "gateways", indexes = {
+        @Index(name = "idx_gateway_proceso", columnList = "proceso_id")
+})
 @Getter
 @Setter
 public class Gateway extends ElementoBpmn {

@@ -8,7 +8,10 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "historial_cambios")
+@Table(name = "historial_cambios", indexes = {
+        @Index(name = "idx_historial_proceso", columnList = "proceso_id"),
+        @Index(name = "idx_historial_fecha", columnList = "fecha")
+})
 @Getter
 @Setter
 public class HistorialCambios extends AuditableEntity {

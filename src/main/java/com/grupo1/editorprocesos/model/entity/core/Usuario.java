@@ -7,7 +7,9 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "usuarios")
+@Table(name = "usuarios", indexes = {
+        @Index(name = "idx_usuario_email", columnList = "email", unique = true)
+})
 @Getter
 @Setter
 public class Usuario extends AuditableEntity {

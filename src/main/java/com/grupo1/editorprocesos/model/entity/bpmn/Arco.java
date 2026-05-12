@@ -7,7 +7,9 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "arcos")
+@Table(name = "arcos", indexes = {
+        @Index(name = "idx_arco_proceso", columnList = "proceso_id")
+})
 @Getter
 @Setter
 public class Arco extends AuditableEntity {

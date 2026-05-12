@@ -3,6 +3,7 @@ package com.grupo1.editorprocesos.controller;
 import com.grupo1.editorprocesos.dto.ActividadDTO;
 import com.grupo1.editorprocesos.dto.ApiResponse;
 import com.grupo1.editorprocesos.service.ActividadService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +24,7 @@ public class ActividadController {
      * Opcionales: posicionX, posicionY, laneId.
      */
     @PostMapping
-    public ResponseEntity<ApiResponse<ActividadDTO>> crearActividad(@RequestBody ActividadDTO actividadDTO) {
+    public ResponseEntity<ApiResponse<ActividadDTO>> crearActividad(@Valid @RequestBody ActividadDTO actividadDTO) {
         ActividadDTO creada = actividadService.crearActividad(actividadDTO);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ApiResponse<>(true, "Actividad creada exitosamente", creada));
@@ -36,7 +37,7 @@ public class ActividadController {
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<ActividadDTO>> editarActividad(
             @PathVariable Long id,
-            @RequestBody ActividadDTO actividadDTO) {
+            @Valid @RequestBody ActividadDTO actividadDTO) {
         ActividadDTO actualizada = actividadService.editarActividad(id, actividadDTO);
         return ResponseEntity.ok(new ApiResponse<>(true, "Actividad actualizada exitosamente", actualizada));
     }

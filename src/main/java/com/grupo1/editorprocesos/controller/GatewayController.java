@@ -3,6 +3,7 @@ package com.grupo1.editorprocesos.controller;
 import com.grupo1.editorprocesos.dto.ApiResponse;
 import com.grupo1.editorprocesos.dto.GatewayDTO;
 import com.grupo1.editorprocesos.service.GatewayService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +24,7 @@ public class GatewayController {
      * Opcionales: posicionX, posicionY.
      */
     @PostMapping
-    public ResponseEntity<ApiResponse<GatewayDTO>> crearGateway(@RequestBody GatewayDTO gatewayDTO) {
+    public ResponseEntity<ApiResponse<GatewayDTO>> crearGateway(@Valid @RequestBody GatewayDTO gatewayDTO) {
         GatewayDTO creado = gatewayService.crearGateway(gatewayDTO);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ApiResponse<>(true, "Gateway creado exitosamente", creado));
@@ -36,7 +37,7 @@ public class GatewayController {
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<GatewayDTO>> editarGateway(
             @PathVariable Long id,
-            @RequestBody GatewayDTO gatewayDTO) {
+            @Valid @RequestBody GatewayDTO gatewayDTO) {
         GatewayDTO actualizado = gatewayService.editarGateway(id, gatewayDTO);
         return ResponseEntity.ok(new ApiResponse<>(true, "Gateway actualizado exitosamente", actualizado));
     }

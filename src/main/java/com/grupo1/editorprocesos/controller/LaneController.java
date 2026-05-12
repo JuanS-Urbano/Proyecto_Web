@@ -2,6 +2,7 @@ package com.grupo1.editorprocesos.controller;
 
 import java.util.List;
 
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,7 +25,7 @@ public class LaneController {
     @PostMapping("/procesos/{procesoId}/lanes")
     public ResponseEntity<ApiResponse<LaneDTO>> crearLane(
             @PathVariable Long procesoId,
-            @RequestBody LaneDTO laneDTO) {
+            @Valid @RequestBody LaneDTO laneDTO) {
         LaneDTO creado = laneService.crearLane(procesoId, laneDTO);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ApiResponse<>(true, "Lane creado exitosamente", creado));
@@ -45,7 +46,7 @@ public class LaneController {
     @PutMapping("/lanes/{laneId}")
     public ResponseEntity<ApiResponse<LaneDTO>> editarLane(
             @PathVariable Long laneId,
-            @RequestBody LaneDTO laneDTO) {
+            @Valid @RequestBody LaneDTO laneDTO) {
         LaneDTO actualizado = laneService.editarLane(laneId, laneDTO);
         return ResponseEntity.ok(new ApiResponse<>(true, "Lane actualizado exitosamente", actualizado));
     }

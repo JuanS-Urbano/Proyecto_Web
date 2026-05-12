@@ -4,6 +4,7 @@ import com.grupo1.editorprocesos.dto.ApiResponse;
 import com.grupo1.editorprocesos.dto.CorrelacionResultDTO;
 import com.grupo1.editorprocesos.dto.MensajeDTO;
 import com.grupo1.editorprocesos.service.MensajeService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +23,7 @@ public class MensajeController {
      * HU-25 (Dev 1): Enviar un Message Throw.
      */
     @PostMapping("/throw")
-    public ResponseEntity<ApiResponse<MensajeDTO>> throwMessage(@RequestBody MensajeDTO dto) {
+    public ResponseEntity<ApiResponse<MensajeDTO>> throwMessage(@Valid @RequestBody MensajeDTO dto) {
         MensajeDTO creado = mensajeService.throwMessage(dto);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ApiResponse<>(true, "Mensaje Throw enviado exitosamente", creado));
@@ -32,7 +33,7 @@ public class MensajeController {
      * HU-27 (Dev 2): Capturar un Message Catch.
      */
     @PostMapping("/catch")
-    public ResponseEntity<ApiResponse<MensajeDTO>> catchMessage(@RequestBody MensajeDTO dto) {
+    public ResponseEntity<ApiResponse<MensajeDTO>> catchMessage(@Valid @RequestBody MensajeDTO dto) {
         MensajeDTO resultado = mensajeService.catchMessage(dto);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ApiResponse<>(true, "Mensaje CATCH registrado exitosamente", resultado));

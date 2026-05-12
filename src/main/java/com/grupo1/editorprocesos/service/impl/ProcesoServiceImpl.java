@@ -110,7 +110,12 @@ public class ProcesoServiceImpl implements ProcesoService {
     @Override
     @Transactional(readOnly = true)
     public List<ProcesoDTO> listarProcesosPorPool(Long poolId) {
-        Pool pool = poolService.obtenerEntityById(poolId);
+        Pool pool;
+        try {
+            pool = poolService.obtenerEntityById(poolId);
+        } catch (ResourceNotFoundException e) {
+            return List.of();
+        }
 
         Usuario usuarioActual = obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, pool.getEmpresa());

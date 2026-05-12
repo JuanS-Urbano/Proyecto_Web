@@ -10,7 +10,12 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "mensajes")
+@Table(name = "mensajes", indexes = {
+        @Index(name = "idx_mensaje_correlation_key", columnList = "correlation_key"),
+        @Index(name = "idx_mensaje_proceso", columnList = "proceso_id"),
+        @Index(name = "idx_mensaje_proceso_destino", columnList = "proceso_destino_id"),
+        @Index(name = "idx_mensaje_estado", columnList = "estado")
+})
 @Getter
 @Setter
 public class Mensaje extends AuditableEntity {
