@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -60,6 +61,7 @@ public class ActividadController {
      * Sin confirmación devuelve HTTP 400 para evitar eliminaciones accidentales.
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN_EMPRESA', 'ADMIN_PLATAFORMA')")
     public ResponseEntity<ApiResponse<Void>> eliminarActividad(
             @PathVariable Long id,
             @RequestParam(name = "confirmar", defaultValue = "false") boolean confirmar) {

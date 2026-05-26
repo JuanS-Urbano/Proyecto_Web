@@ -7,12 +7,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import static org.mockito.Mockito.when;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.crypto.password.PasswordEncoder;
-
+import com.grupo1.editorprocesos.config.JwtService;
 import com.grupo1.editorprocesos.dto.AuthRequestDTO;
 import com.grupo1.editorprocesos.dto.AuthResponseDTO;
 import com.grupo1.editorprocesos.exception.ResourceNotFoundException;
@@ -20,8 +15,18 @@ import com.grupo1.editorprocesos.exception.UnauthorizedException;
 import com.grupo1.editorprocesos.model.entity.core.Empresa;
 import com.grupo1.editorprocesos.model.entity.core.Usuario;
 import com.grupo1.editorprocesos.model.enums.RolSistema;
+import com.grupo1.editorprocesos.repository.PoolRepository;
 import com.grupo1.editorprocesos.repository.UsuarioRepository;
 import com.grupo1.editorprocesos.service.impl.AuthServiceImpl;
+import org.mockito.Mock;
+import org.mockito.InjectMocks;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.anyLong;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceImplTest {
@@ -31,6 +36,12 @@ class AuthServiceImplTest {
 
     @Mock
     private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private PoolRepository poolRepository;
+
+    @Mock
+    private JwtService jwtService;
 
     @InjectMocks
     private AuthServiceImpl authService;
@@ -60,6 +71,7 @@ class AuthServiceImplTest {
 
         when(usuarioRepository.findByEmail("test@empresa.com")).thenReturn(Optional.of(usuario));
         when(passwordEncoder.matches("plainPassword", "hashedPassword")).thenReturn(true);
+        when(jwtService.generateToken(any(), any(), any())).thenReturn("session-10");
 
         AuthResponseDTO response = authService.login(request);
 
@@ -122,6 +134,7 @@ class AuthServiceImplTest {
 
         when(usuarioRepository.findByEmail("test@empresa.com")).thenReturn(Optional.of(usuario));
         when(passwordEncoder.matches("plainPassword", "hashedPassword")).thenReturn(true);
+        when(jwtService.generateToken(any(), any(), any())).thenReturn("session-10");
 
         AuthResponseDTO response = authService.login(request);
 
@@ -136,6 +149,7 @@ class AuthServiceImplTest {
 
         when(usuarioRepository.findByEmail("test@empresa.com")).thenReturn(Optional.of(usuario));
         when(passwordEncoder.matches("plainPassword", "hashedPassword")).thenReturn(true);
+        when(jwtService.generateToken(any(), any(), any())).thenReturn("session-10");
 
         AuthResponseDTO response = authService.login(request);
 
@@ -152,6 +166,7 @@ class AuthServiceImplTest {
 
         when(usuarioRepository.findByEmail("test@empresa.com")).thenReturn(Optional.of(usuario));
         when(passwordEncoder.matches("plainPassword", "hashedPassword")).thenReturn(true);
+        when(jwtService.generateToken(any(), any(), any())).thenReturn("session-10");
 
         AuthResponseDTO response = authService.login(request);
 

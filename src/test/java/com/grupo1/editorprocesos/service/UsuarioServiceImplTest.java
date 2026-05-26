@@ -107,7 +107,7 @@ class UsuarioServiceImplTest {
 
     @Test
     void crearAdminInicial_exitoso() {
-        when(passwordEncoder.encode(any(String.class))).thenReturn("hashedRandom");
+        when(passwordEncoder.encode(any())).thenReturn("hashedRandom");
 
         usuarioService.crearAdminInicial(empresa, "admin@empresa.com");
 

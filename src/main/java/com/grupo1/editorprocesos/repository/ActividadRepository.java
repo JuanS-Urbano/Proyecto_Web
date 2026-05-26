@@ -35,4 +35,7 @@ public interface ActividadRepository extends JpaRepository<Actividad, Long> {
      */
     @Query("SELECT COUNT(a) > 0 FROM Actividad a WHERE a.lane.rolProceso.id = :rolId")
     boolean existeActividadConRol(@Param("rolId") Long rolId);
+
+    @Query("SELECT COUNT(a) FROM Actividad a WHERE a.proceso.pool.empresa.id = :empresaId")
+    long countByEmpresaId(@Param("empresaId") Long empresaId);
 }

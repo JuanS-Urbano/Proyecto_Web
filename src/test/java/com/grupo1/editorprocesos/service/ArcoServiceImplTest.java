@@ -28,10 +28,8 @@ import com.grupo1.editorprocesos.repository.ActividadRepository;
 import com.grupo1.editorprocesos.repository.ArcoRepository;
 import com.grupo1.editorprocesos.repository.GatewayRepository;
 import com.grupo1.editorprocesos.repository.HistorialCambiosRepository;
-import com.grupo1.editorprocesos.repository.UsuarioRepository;
 import com.grupo1.editorprocesos.service.impl.ArcoServiceImpl;
 
-import jakarta.servlet.http.HttpServletRequest;
 
 @ExtendWith(MockitoExtension.class)
 class ArcoServiceImplTest {
@@ -46,7 +44,7 @@ class ArcoServiceImplTest {
     private ProcesoService procesoService;
 
     @Mock
-    private UsuarioRepository usuarioRepository;
+    private com.grupo1.editorprocesos.service.UsuarioActualService usuarioActualService;
 
     @Mock
     private HistorialCambiosRepository historialCambiosRepository;
@@ -57,8 +55,7 @@ class ArcoServiceImplTest {
     @Mock
     private GatewayRepository gatewayRepository;
 
-    @Mock
-    private HttpServletRequest httpServletRequest;
+
 
     @InjectMocks
     private ArcoServiceImpl arcoService;
@@ -68,6 +65,9 @@ class ArcoServiceImplTest {
     private Pool pool;
     private Proceso proceso;
     private Arco arco;
+    private Actividad actividad1;
+    private Actividad actividad2;
+    private Gateway gateway;
 
     @BeforeEach
     void setUp() {
@@ -89,25 +89,36 @@ class ArcoServiceImplTest {
 
         arco = new Arco();
         arco.setId(20L);
-        arco.setOrigenId("Act1");
-        arco.setDestinoId("Act2");
+        arco.setOrigenId("101");
+        arco.setDestinoId("102");
         arco.setProceso(proceso);
 
-        org.mockito.Mockito.lenient().when(httpServletRequest.getHeader("X-User-Email")).thenReturn("test@empresa.com");
-        org.mockito.Mockito.lenient().when(usuarioRepository.findByEmail("test@empresa.com")).thenReturn(Optional.of(usuario));
+        actividad1 = new Actividad();
+        actividad1.setId(101L);
+        actividad1.setProceso(proceso);
+
+        actividad2 = new Actividad();
+        actividad2.setId(102L);
+        actividad2.setProceso(proceso);
+
+        gateway = new Gateway();
+        gateway.setId(104L);
+        gateway.setProceso(proceso);
+
+        org.mockito.Mockito.lenient().when(usuarioActualService.obtenerUsuarioActual()).thenReturn(usuario);
     }
 
     @Test
     void crearArco_exitoso() {
         ArcoDTO dto = new ArcoDTO();
         dto.setProceso(new com.grupo1.editorprocesos.dto.ReferenciaDTO(5L, null));
-        dto.setOrigenId("Act1");
-        dto.setDestinoId("Act2");
+        dto.setOrigenId("101");
+        dto.setDestinoId("102");
 
         when(procesoService.obtenerEntityById(5L)).thenReturn(proceso);
-        when(actividadRepository.findByNombreAndProcesoId("Act1", 5L)).thenReturn(Optional.of(new Actividad()));
-        when(actividadRepository.findByNombreAndProcesoId("Act2", 5L)).thenReturn(Optional.of(new Actividad()));
-        when(arcoRepository.findByOrigenIdAndDestinoIdAndProcesoId("Act1", "Act2", 5L)).thenReturn(Optional.empty());
+        when(actividadRepository.findById(101L)).thenReturn(Optional.of(actividad1));
+        when(actividadRepository.findById(102L)).thenReturn(Optional.of(actividad2));
+        when(arcoRepository.findByOrigenIdAndDestinoIdAndProcesoId("101", "102", 5L)).thenReturn(Optional.empty());
         when(arcoRepository.save(any(Arco.class))).thenReturn(arco);
 
         ArcoDTO result = arcoService.crearArco(dto);
@@ -120,11 +131,11 @@ class ArcoServiceImplTest {
     void crearArco_mismaReferencia() {
         ArcoDTO dto = new ArcoDTO();
         dto.setProceso(new com.grupo1.editorprocesos.dto.ReferenciaDTO(5L, null));
-        dto.setOrigenId("Act1");
-        dto.setDestinoId("Act1");
+        dto.setOrigenId("101");
+        dto.setDestinoId("101");
 
         when(procesoService.obtenerEntityById(5L)).thenReturn(proceso);
-        when(actividadRepository.findByNombreAndProcesoId("Act1", 5L)).thenReturn(Optional.of(new Actividad()));
+        when(actividadRepository.findById(101L)).thenReturn(Optional.of(actividad1));
 
         assertThatThrownBy(() -> arcoService.crearArco(dto))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -135,12 +146,12 @@ class ArcoServiceImplTest {
     void crearArco_elementoNoEncontrado() {
         ArcoDTO dto = new ArcoDTO();
         dto.setProceso(new com.grupo1.editorprocesos.dto.ReferenciaDTO(5L, null));
-        dto.setOrigenId("Act3");
-        dto.setDestinoId("Act2");
+        dto.setOrigenId("103");
+        dto.setDestinoId("102");
 
         when(procesoService.obtenerEntityById(5L)).thenReturn(proceso);
-        when(actividadRepository.findByNombreAndProcesoId("Act3", 5L)).thenReturn(Optional.empty());
-        when(gatewayRepository.findByNombreAndProcesoId("Act3", 5L)).thenReturn(Optional.empty());
+        when(actividadRepository.findById(103L)).thenReturn(Optional.empty());
+        when(gatewayRepository.findById(103L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> arcoService.crearArco(dto))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -151,13 +162,13 @@ class ArcoServiceImplTest {
     void crearArco_duplicado() {
         ArcoDTO dto = new ArcoDTO();
         dto.setProceso(new com.grupo1.editorprocesos.dto.ReferenciaDTO(5L, null));
-        dto.setOrigenId("Act1");
-        dto.setDestinoId("Act2");
+        dto.setOrigenId("101");
+        dto.setDestinoId("102");
 
         when(procesoService.obtenerEntityById(5L)).thenReturn(proceso);
-        when(actividadRepository.findByNombreAndProcesoId("Act1", 5L)).thenReturn(Optional.of(new Actividad()));
-        when(actividadRepository.findByNombreAndProcesoId("Act2", 5L)).thenReturn(Optional.of(new Actividad()));
-        when(arcoRepository.findByOrigenIdAndDestinoIdAndProcesoId("Act1", "Act2", 5L)).thenReturn(Optional.of(arco));
+        when(actividadRepository.findById(101L)).thenReturn(Optional.of(actividad1));
+        when(actividadRepository.findById(102L)).thenReturn(Optional.of(actividad2));
+        when(arcoRepository.findByOrigenIdAndDestinoIdAndProcesoId("101", "102", 5L)).thenReturn(Optional.of(arco));
 
         assertThatThrownBy(() -> arcoService.crearArco(dto))
                 .isInstanceOf(DuplicateResourceException.class)
@@ -167,17 +178,17 @@ class ArcoServiceImplTest {
     @Test
     void editarArco_exitoso() {
         ArcoDTO dto = new ArcoDTO();
-        dto.setOrigenId("GatewayX");
+        dto.setOrigenId("104");
 
         when(arcoRepository.findById(20L)).thenReturn(Optional.of(arco));
-        when(actividadRepository.findByNombreAndProcesoId("GatewayX", 5L)).thenReturn(Optional.empty());
-        when(gatewayRepository.findByNombreAndProcesoId("GatewayX", 5L)).thenReturn(Optional.of(new Gateway()));
-        when(arcoRepository.findByOrigenIdAndDestinoIdAndProcesoId("GatewayX", "Act2", 5L)).thenReturn(Optional.empty());
+        when(actividadRepository.findById(104L)).thenReturn(Optional.empty());
+        when(gatewayRepository.findById(104L)).thenReturn(Optional.of(gateway));
+        when(arcoRepository.findByOrigenIdAndDestinoIdAndProcesoId("104", "102", 5L)).thenReturn(Optional.empty());
         when(arcoRepository.save(arco)).thenReturn(arco);
 
         ArcoDTO result = arcoService.editarArco(20L, dto);
 
-        assertThat(result.getOrigenId()).isEqualTo("GatewayX");
+        assertThat(result.getOrigenId()).isEqualTo("104");
         verify(historialCambiosRepository).save(any(HistorialCambios.class));
     }
 

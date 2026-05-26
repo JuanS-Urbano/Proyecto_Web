@@ -10,9 +10,8 @@ import com.grupo1.editorprocesos.model.enums.RolSistema;
 import com.grupo1.editorprocesos.service.EmpresaService;
 import com.grupo1.editorprocesos.repository.PoolRepository;
 import com.grupo1.editorprocesos.repository.ProcesoRepository;
-import com.grupo1.editorprocesos.repository.UsuarioRepository;
 import com.grupo1.editorprocesos.service.PoolService;
-import jakarta.servlet.http.HttpServletRequest;
+import com.grupo1.editorprocesos.service.UsuarioActualService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -29,9 +28,8 @@ public class PoolServiceImpl implements PoolService {
     private final PoolRepository poolRepository;
     private final ProcesoRepository procesoRepository;
     private final EmpresaService empresaService;
-    private final UsuarioRepository usuarioRepository;
     private final ModelMapper modelMapper;
-    private final HttpServletRequest httpServletRequest;
+    private final UsuarioActualService usuarioActualService;
 
     @Override
     @Transactional
@@ -42,7 +40,7 @@ public class PoolServiceImpl implements PoolService {
         Empresa empresa = empresaService.obtenerEntityById(poolDTO.getEmpresa().getId());
 
         // Validar que el usuario actual tenga rol ADMIN_EMPRESA
-        Usuario usuario = obtenerUsuarioActual();
+        Usuario usuario = usuarioActualService.obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuario, empresa);
         if (usuario.getRolSistema() != RolSistema.ADMIN_EMPRESA
                 && usuario.getRolSistema() != RolSistema.ADMIN_PLATAFORMA) {
@@ -65,7 +63,7 @@ public class PoolServiceImpl implements PoolService {
     public List<PoolDTO> listarPoolsPorEmpresa(Long empresaId) {
         Empresa empresa = empresaService.obtenerEntityById(empresaId);
 
-        Usuario usuario = obtenerUsuarioActual();
+        Usuario usuario = usuarioActualService.obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuario, empresa);
 
         return poolRepository.findByEmpresaId(empresaId).stream()
@@ -84,7 +82,7 @@ public class PoolServiceImpl implements PoolService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                 POOL_NO_ENCONTRADO_CON_ID + id));
 
-        Usuario usuario = obtenerUsuarioActual();
+        Usuario usuario = usuarioActualService.obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuario, pool.getEmpresa());
         if (usuario.getRolSistema() != RolSistema.ADMIN_EMPRESA
                 && usuario.getRolSistema() != RolSistema.ADMIN_PLATAFORMA) {
@@ -109,7 +107,7 @@ public class PoolServiceImpl implements PoolService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                 POOL_NO_ENCONTRADO_CON_ID + id));
 
-        Usuario usuario = obtenerUsuarioActual();
+        Usuario usuario = usuarioActualService.obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuario, pool.getEmpresa());
         if (usuario.getRolSistema() != RolSistema.ADMIN_EMPRESA
                 && usuario.getRolSistema() != RolSistema.ADMIN_PLATAFORMA) {
@@ -127,15 +125,7 @@ public class PoolServiceImpl implements PoolService {
 
     // ===== Métodos privados de utilidad =====
 
-    private Usuario obtenerUsuarioActual() {
-        String email = httpServletRequest.getHeader("X-User-Email");
-        if (email == null || email.isBlank()) {
-            throw new UnauthorizedException("No se proporcionó el header X-User-Email para identificar al usuario");
-        }
-        return usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new UnauthorizedException(
-                        "Usuario no encontrado con el email: " + email));
-    }
+
 
     private void validarUsuarioPertenecAEmpresa(Usuario usuario, Empresa empresa) {
         if (usuario.getEmpresa() == null

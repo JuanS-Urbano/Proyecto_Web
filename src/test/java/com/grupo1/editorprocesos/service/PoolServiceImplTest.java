@@ -25,10 +25,8 @@ import com.grupo1.editorprocesos.model.entity.core.Usuario;
 import com.grupo1.editorprocesos.model.enums.RolSistema;
 import com.grupo1.editorprocesos.repository.PoolRepository;
 import com.grupo1.editorprocesos.repository.ProcesoRepository;
-import com.grupo1.editorprocesos.repository.UsuarioRepository;
 import com.grupo1.editorprocesos.service.impl.PoolServiceImpl;
 
-import jakarta.servlet.http.HttpServletRequest;
 
 @ExtendWith(MockitoExtension.class)
 class PoolServiceImplTest {
@@ -43,13 +41,10 @@ class PoolServiceImplTest {
     private EmpresaService empresaService;
 
     @Mock
-    private UsuarioRepository usuarioRepository;
+    private com.grupo1.editorprocesos.service.UsuarioActualService usuarioActualService;
 
     @Mock
     private ModelMapper modelMapper;
-
-    @Mock
-    private HttpServletRequest httpServletRequest;
 
     @InjectMocks
     private PoolServiceImpl poolService;
@@ -68,8 +63,7 @@ class PoolServiceImplTest {
         usuario.setEmpresa(empresa);
         usuario.setRolSistema(RolSistema.ADMIN_EMPRESA);
 
-        org.mockito.Mockito.lenient().when(httpServletRequest.getHeader("X-User-Email")).thenReturn("admin@empresa.com");
-        org.mockito.Mockito.lenient().when(usuarioRepository.findByEmail("admin@empresa.com")).thenReturn(Optional.of(usuario));
+        org.mockito.Mockito.lenient().when(usuarioActualService.obtenerUsuarioActual()).thenReturn(usuario);
     }
 
     @Test
@@ -317,7 +311,7 @@ class PoolServiceImplTest {
 
     @Test
     void listarPoolsPorEmpresa_sinHeaderUsuario_falla() {
-        when(httpServletRequest.getHeader("X-User-Email")).thenReturn(null);
+        when(usuarioActualService.obtenerUsuarioActual()).thenThrow(new UnauthorizedException("No se proporcionó el header X-User-Email para identificar al usuario"));
         when(empresaService.obtenerEntityById(1L)).thenReturn(empresa);
 
         assertThatThrownBy(() -> poolService.listarPoolsPorEmpresa(1L))

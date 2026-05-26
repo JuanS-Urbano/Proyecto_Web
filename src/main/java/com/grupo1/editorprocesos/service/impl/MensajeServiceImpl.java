@@ -14,10 +14,9 @@ import com.grupo1.editorprocesos.model.enums.EstadoMensaje;
 import com.grupo1.editorprocesos.model.enums.TipoMensaje;
 import com.grupo1.editorprocesos.repository.ActividadRepository;
 import com.grupo1.editorprocesos.repository.MensajeRepository;
-import com.grupo1.editorprocesos.service.ProcesoService;
-import com.grupo1.editorprocesos.repository.UsuarioRepository;
 import com.grupo1.editorprocesos.service.MensajeService;
-import jakarta.servlet.http.HttpServletRequest;
+import com.grupo1.editorprocesos.service.ProcesoService;
+import com.grupo1.editorprocesos.service.UsuarioActualService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -36,8 +35,7 @@ public class MensajeServiceImpl implements MensajeService {
     private final MensajeRepository mensajeRepository;
     private final ProcesoService procesoService;
     private final ActividadRepository actividadRepository;
-    private final UsuarioRepository usuarioRepository;
-    private final HttpServletRequest httpServletRequest;
+    private final UsuarioActualService usuarioActualService;
 
     // =====================================================================================
     // HU-25 (Dev 1): Message Throw
@@ -55,7 +53,7 @@ public class MensajeServiceImpl implements MensajeService {
 
         Proceso proceso = procesoService.obtenerEntityById(dto.getProceso().getId());
 
-        Usuario usuarioActual = obtenerUsuarioActual();
+        Usuario usuarioActual = usuarioActualService.obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, proceso.getPool().getEmpresa());
 
         if (dto.getPayloadJson() != null && !dto.getPayloadJson().isBlank()) {
@@ -147,7 +145,7 @@ public class MensajeServiceImpl implements MensajeService {
     public List<MensajeDTO> listarMensajesPorProceso(Long procesoId) {
         Proceso proceso = procesoService.obtenerEntityById(procesoId);
 
-        Usuario usuarioActual = obtenerUsuarioActual();
+        Usuario usuarioActual = usuarioActualService.obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, proceso.getPool().getEmpresa());
 
         return mensajeRepository.findByProcesoId(procesoId).stream()
@@ -286,16 +284,7 @@ public class MensajeServiceImpl implements MensajeService {
         return dto;
     }
 
-    private Usuario obtenerUsuarioActual() {
-        String email = httpServletRequest.getHeader("X-User-Email");
-        if (email == null || email.isBlank()) {
-            throw new UnauthorizedException(
-                    "No se proporcionó el header X-User-Email para identificar al usuario");
-        }
-        return usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new UnauthorizedException(
-                        "Usuario no encontrado con el email: " + email));
-    }
+
 
     private void validarUsuarioPertenecAEmpresa(Usuario usuario, Empresa empresa) {
         if (usuario.getEmpresa() == null

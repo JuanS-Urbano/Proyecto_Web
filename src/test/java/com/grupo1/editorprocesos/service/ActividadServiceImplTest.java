@@ -26,10 +26,8 @@ import com.grupo1.editorprocesos.repository.ActividadRepository;
 import com.grupo1.editorprocesos.repository.ArcoRepository;
 import com.grupo1.editorprocesos.repository.HistorialCambiosRepository;
 import com.grupo1.editorprocesos.repository.ProcesoRepository;
-import com.grupo1.editorprocesos.repository.UsuarioRepository;
 import com.grupo1.editorprocesos.service.impl.ActividadServiceImpl;
 
-import jakarta.servlet.http.HttpServletRequest;
 
 @ExtendWith(MockitoExtension.class)
 class ActividadServiceImplTest {
@@ -47,16 +45,13 @@ class ActividadServiceImplTest {
     private ArcoRepository arcoRepository;
 
     @Mock
-    private UsuarioRepository usuarioRepository;
-
-    @Mock
-    private HistorialCambiosRepository historialCambiosRepository;
+    private com.grupo1.editorprocesos.service.UsuarioActualService usuarioActualService;
 
     @Mock
     private LaneService laneService;
 
     @Mock
-    private HttpServletRequest httpServletRequest;
+    private HistorialCambiosRepository historialCambiosRepository;
 
     @InjectMocks
     private ActividadServiceImpl actividadService;
@@ -84,11 +79,7 @@ class ActividadServiceImplTest {
         usuario.setEmail("user@empresa.com");
         usuario.setEmpresa(empresa);
 
-        // Estos stubs son utilizados por la mayoría de los tests, pero algunos casos
-        // se detienen antes de necesitarlos. Los marcamos como lenient para evitar
-        // UnnecessaryStubbingException.
-        org.mockito.Mockito.lenient().when(httpServletRequest.getHeader("X-User-Email")).thenReturn(usuario.getEmail());
-        org.mockito.Mockito.lenient().when(usuarioRepository.findByEmail(usuario.getEmail())).thenReturn(Optional.of(usuario));
+        org.mockito.Mockito.lenient().when(usuarioActualService.obtenerUsuarioActual()).thenReturn(usuario);
     }
 
     @Test
@@ -139,7 +130,7 @@ class ActividadServiceImplTest {
 
     @Test
     void crearActividad_sinHeaderUsuario_falla() {
-        when(httpServletRequest.getHeader("X-User-Email")).thenReturn(null);
+        when(usuarioActualService.obtenerUsuarioActual()).thenThrow(new UnauthorizedException("No se proporcionó el header X-User-Email para identificar al usuario"));
         when(procesoRepository.findById(proceso.getId())).thenReturn(Optional.of(proceso));
 
         ActividadDTO dto = new ActividadDTO();
@@ -382,8 +373,7 @@ class ActividadServiceImplTest {
         usuarioSinEmpresa.setId(100L);
         usuarioSinEmpresa.setEmail("sinempresa@demo.com");
 
-        when(httpServletRequest.getHeader("X-User-Email")).thenReturn(usuarioSinEmpresa.getEmail());
-        when(usuarioRepository.findByEmail(usuarioSinEmpresa.getEmail())).thenReturn(Optional.of(usuarioSinEmpresa));
+        when(usuarioActualService.obtenerUsuarioActual()).thenReturn(usuarioSinEmpresa);
         when(procesoRepository.findById(proceso.getId())).thenReturn(Optional.of(proceso));
 
         ActividadDTO dto = new ActividadDTO();

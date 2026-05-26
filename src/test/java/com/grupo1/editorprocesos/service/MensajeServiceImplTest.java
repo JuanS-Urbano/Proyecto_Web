@@ -14,9 +14,7 @@ import com.grupo1.editorprocesos.model.enums.EstadoMensaje;
 import com.grupo1.editorprocesos.model.enums.TipoMensaje;
 import com.grupo1.editorprocesos.repository.ActividadRepository;
 import com.grupo1.editorprocesos.repository.MensajeRepository;
-import com.grupo1.editorprocesos.repository.UsuarioRepository;
 import com.grupo1.editorprocesos.service.impl.MensajeServiceImpl;
-import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -46,10 +44,7 @@ class MensajeServiceImplTest {
     private ActividadRepository actividadRepository;
 
     @Mock
-    private UsuarioRepository usuarioRepository;
-
-    @Mock
-    private HttpServletRequest httpServletRequest;
+    private com.grupo1.editorprocesos.service.UsuarioActualService usuarioActualService;
 
 
     @InjectMocks
@@ -78,8 +73,7 @@ class MensajeServiceImplTest {
         usuario.setEmail("user@empresa.com");
         usuario.setEmpresa(empresa);
 
-        Mockito.lenient().when(httpServletRequest.getHeader("X-User-Email")).thenReturn(usuario.getEmail());
-        Mockito.lenient().when(usuarioRepository.findByEmail(usuario.getEmail())).thenReturn(Optional.of(usuario));
+        Mockito.lenient().when(usuarioActualService.obtenerUsuarioActual()).thenReturn(usuario);
     }
 
     // =====================================================================================
@@ -165,7 +159,7 @@ class MensajeServiceImplTest {
 
     @Test
     void throwMessage_sinHeaderUsuario_falla() {
-        when(httpServletRequest.getHeader("X-User-Email")).thenReturn(null);
+        when(usuarioActualService.obtenerUsuarioActual()).thenThrow(new UnauthorizedException("No se proporcionó el header X-User-Email para identificar al usuario"));
         when(procesoService.obtenerEntityById(proceso.getId())).thenReturn(proceso);
 
         MensajeDTO dto = new MensajeDTO();
@@ -452,8 +446,7 @@ class MensajeServiceImplTest {
         usuarioOtro.setEmail("otro@empresa.com");
         usuarioOtro.setEmpresa(otraEmpresa);
 
-        when(httpServletRequest.getHeader("X-User-Email")).thenReturn("otro@empresa.com");
-        when(usuarioRepository.findByEmail("otro@empresa.com")).thenReturn(Optional.of(usuarioOtro));
+        when(usuarioActualService.obtenerUsuarioActual()).thenReturn(usuarioOtro);
         Long procesoId = proceso.getId();
         when(procesoService.obtenerEntityById(procesoId)).thenReturn(proceso);
 

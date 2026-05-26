@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -95,6 +96,7 @@ public class ProcesoController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN_EMPRESA', 'ADMIN_PLATAFORMA')")
     public ResponseEntity<ApiResponse<Void>> eliminarProceso(@PathVariable Long id) {
         procesoService.eliminarProceso(id);
         ApiResponse<Void> response = new ApiResponse<>(true, "Proceso eliminado exitosamente", null);

@@ -15,9 +15,9 @@ import com.grupo1.editorprocesos.service.EmpresaService;
 import com.grupo1.editorprocesos.repository.HistorialCambiosRepository;
 import com.grupo1.editorprocesos.service.PoolService;
 import com.grupo1.editorprocesos.repository.ProcesoRepository;
-import com.grupo1.editorprocesos.repository.UsuarioRepository;
 import com.grupo1.editorprocesos.service.ProcesoService;
 import com.grupo1.editorprocesos.service.PermisosPoolService;
+import com.grupo1.editorprocesos.service.UsuarioActualService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -41,9 +41,9 @@ public class ProcesoServiceImpl implements ProcesoService {
     private final ProcesoRepository procesoRepository;
     private final PoolService poolService;
     private final EmpresaService empresaService;
-    private final UsuarioRepository usuarioRepository;
     private final HistorialCambiosRepository historialCambiosRepository;
     private final ModelMapper modelMapper;
+    private final UsuarioActualService usuarioActualService;
     private final HttpServletRequest httpServletRequest;
     private final PermisosPoolService permisosPoolService;
 
@@ -62,7 +62,8 @@ public class ProcesoServiceImpl implements ProcesoService {
                     "Empresa no encontrada para el pool con ID: " + procesoDTO.getPool().getId());
         }
 
-        Usuario usuarioActual = obtenerUsuarioActual();
+        // 2. Validar que el usuario actual pertenezca a la empresa del proceso
+        Usuario usuarioActual = usuarioActualService.obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, empresa);
         permisosPoolService.validarPermisoEscritura(usuarioActual);
 
@@ -98,7 +99,7 @@ public class ProcesoServiceImpl implements ProcesoService {
     public List<ProcesoDTO> listarProcesosPorEmpresa(Long empresaId) {
         Empresa empresa = empresaService.obtenerEntityById(empresaId);
 
-        Usuario usuarioActual = obtenerUsuarioActual();
+        Usuario usuarioActual = usuarioActualService.obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, empresa);
         boolean incluirCompartidos = puedeVerProcesosCompartidos(usuarioActual);
 
@@ -117,7 +118,7 @@ public class ProcesoServiceImpl implements ProcesoService {
             return List.of();
         }
 
-        Usuario usuarioActual = obtenerUsuarioActual();
+        Usuario usuarioActual = usuarioActualService.obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, pool.getEmpresa());
         boolean incluirCompartidos = puedeVerProcesosCompartidos(usuarioActual);
 
@@ -131,7 +132,7 @@ public class ProcesoServiceImpl implements ProcesoService {
     public List<ProcesoDTO> listarProcesosPorPoolYEstado(Long poolId, EstadoProceso estado) {
         Pool pool = poolService.obtenerEntityById(poolId);
 
-        Usuario usuarioActual = obtenerUsuarioActual();
+        Usuario usuarioActual = usuarioActualService.obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, pool.getEmpresa());
         boolean incluirCompartidos = puedeVerProcesosCompartidos(usuarioActual);
 
@@ -145,7 +146,7 @@ public class ProcesoServiceImpl implements ProcesoService {
     public List<ProcesoDTO> listarProcesosPorPoolYCategoria(Long poolId, String categoria) {
         Pool pool = poolService.obtenerEntityById(poolId);
 
-        Usuario usuarioActual = obtenerUsuarioActual();
+        Usuario usuarioActual = usuarioActualService.obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, pool.getEmpresa());
         boolean incluirCompartidos = puedeVerProcesosCompartidos(usuarioActual);
 
@@ -159,7 +160,7 @@ public class ProcesoServiceImpl implements ProcesoService {
     public List<ProcesoDTO> listarProcesosPorPoolConFiltros(Long poolId, EstadoProceso estado, String categoria) {
         Pool pool = poolService.obtenerEntityById(poolId);
 
-        Usuario usuarioActual = obtenerUsuarioActual();
+        Usuario usuarioActual = usuarioActualService.obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, pool.getEmpresa());
         boolean incluirCompartidos = puedeVerProcesosCompartidos(usuarioActual);
 
@@ -180,7 +181,7 @@ public class ProcesoServiceImpl implements ProcesoService {
     public List<ProcesoDTO> buscarProcesosPorNombre(Long poolId, String nombre) {
         Pool pool = poolService.obtenerEntityById(poolId);
 
-        Usuario usuarioActual = obtenerUsuarioActual();
+        Usuario usuarioActual = usuarioActualService.obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, pool.getEmpresa());
         boolean incluirCompartidos = puedeVerProcesosCompartidos(usuarioActual);
 
@@ -196,7 +197,7 @@ public class ProcesoServiceImpl implements ProcesoService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         PROCESO_NO_ENCONTRADO + id));
 
-        Usuario usuarioActual = obtenerUsuarioActual();
+        Usuario usuarioActual = usuarioActualService.obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, proceso.getPool().getEmpresa());
 
         StringBuilder cambios = new StringBuilder("Cambios realizados: ");
@@ -254,7 +255,7 @@ public class ProcesoServiceImpl implements ProcesoService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         PROCESO_NO_ENCONTRADO + id));
 
-        Usuario usuarioActual = obtenerUsuarioActual();
+        Usuario usuarioActual = usuarioActualService.obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, proceso.getPool().getEmpresa());
 
         proceso.setEstado(EstadoProceso.INACTIVO);
@@ -275,7 +276,7 @@ public class ProcesoServiceImpl implements ProcesoService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         PROCESO_NO_ENCONTRADO + procesoId));
 
-        Usuario usuarioActual = obtenerUsuarioActual();
+        Usuario usuarioActual = usuarioActualService.obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, proceso.getPool().getEmpresa());
 
         return historialCambiosRepository.findByProcesoId(procesoId).stream()
@@ -302,15 +303,7 @@ public class ProcesoServiceImpl implements ProcesoService {
      * Obtiene el usuario actual desde el header X-User-Email del request HTTP.
      * En la Fase 3 (JWT), se reemplazará por SecurityContextHolder.getContext().getAuthentication().
      */
-    private Usuario obtenerUsuarioActual() {
-        String email = httpServletRequest.getHeader("X-User-Email");
-        if (email == null || email.isBlank()) {
-            throw new UnauthorizedException("No se proporcionó el header X-User-Email para identificar al usuario");
-        }
-        return usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new UnauthorizedException(
-                        "Usuario no encontrado con el email: " + email));
-    }
+
 
     private void validarUsuarioPertenecAEmpresa(Usuario usuario, Empresa empresa) {
         if (usuario.getEmpresa() == null

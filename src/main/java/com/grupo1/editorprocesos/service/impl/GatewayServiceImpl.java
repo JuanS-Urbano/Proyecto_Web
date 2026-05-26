@@ -14,10 +14,9 @@ import com.grupo1.editorprocesos.repository.ArcoRepository;
 import com.grupo1.editorprocesos.repository.GatewayRepository;
 import com.grupo1.editorprocesos.repository.HistorialCambiosRepository;
 import com.grupo1.editorprocesos.service.ProcesoService;
-import com.grupo1.editorprocesos.repository.UsuarioRepository;
 import com.grupo1.editorprocesos.service.GatewayService;
 import com.grupo1.editorprocesos.service.PermisosPoolService;
-import jakarta.servlet.http.HttpServletRequest;
+import com.grupo1.editorprocesos.service.UsuarioActualService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,10 +33,9 @@ public class GatewayServiceImpl implements GatewayService {
 
     private final GatewayRepository gatewayRepository;
     private final ProcesoService procesoService;
-    private final UsuarioRepository usuarioRepository;
     private final HistorialCambiosRepository historialCambiosRepository;
     private final ArcoRepository arcoRepository;
-    private final HttpServletRequest httpServletRequest;
+    private final UsuarioActualService usuarioActualService;
     private final PermisosPoolService permisosPoolService;
 
     // =====================================================================================
@@ -54,7 +52,7 @@ public class GatewayServiceImpl implements GatewayService {
         Proceso proceso = procesoService.obtenerEntityById(gatewayDTO.getProceso().getId());
 
         // 2. Validar usuario y empresa
-        Usuario usuarioActual = obtenerUsuarioActual();
+        Usuario usuarioActual = usuarioActualService.obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, proceso.getPool().getEmpresa());
         permisosPoolService.validarPermisoEscritura(usuarioActual);
 
@@ -102,7 +100,7 @@ public class GatewayServiceImpl implements GatewayService {
 
         // 2. Validar usuario y empresa
         Proceso proceso = gateway.getProceso();
-        Usuario usuarioActual = obtenerUsuarioActual();
+        Usuario usuarioActual = usuarioActualService.obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, proceso.getPool().getEmpresa());
         permisosPoolService.validarPermisoEscritura(usuarioActual);
 
@@ -172,7 +170,7 @@ public class GatewayServiceImpl implements GatewayService {
     public List<GatewayDTO> listarGatewaysPorProceso(Long procesoId) {
         Proceso proceso = procesoService.obtenerEntityById(procesoId);
 
-        Usuario usuarioActual = obtenerUsuarioActual();
+        Usuario usuarioActual = usuarioActualService.obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, proceso.getPool().getEmpresa());
 
         return gatewayRepository.findByProcesoId(procesoId).stream()
@@ -194,7 +192,7 @@ public class GatewayServiceImpl implements GatewayService {
 
         // 2. Validar usuario y empresa
         Proceso proceso = gateway.getProceso();
-        Usuario usuarioActual = obtenerUsuarioActual();
+        Usuario usuarioActual = usuarioActualService.obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, proceso.getPool().getEmpresa());
 
         String nombreGateway = gateway.getNombre();
@@ -272,15 +270,7 @@ public class GatewayServiceImpl implements GatewayService {
         historialCambiosRepository.save(historial);
     }
 
-    private Usuario obtenerUsuarioActual() {
-        String email = httpServletRequest.getHeader("X-User-Email");
-        if (email == null || email.isBlank()) {
-            throw new UnauthorizedException("No se proporcionó el header X-User-Email para identificar al usuario");
-        }
-        return usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new UnauthorizedException(
-                        "Usuario no encontrado con el email: " + email));
-    }
+
 
     private void validarUsuarioPertenecAEmpresa(Usuario usuario, Empresa empresa) {
         if (usuario.getEmpresa() == null

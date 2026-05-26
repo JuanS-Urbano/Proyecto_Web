@@ -30,10 +30,8 @@ import com.grupo1.editorprocesos.model.enums.TipoGateway;
 import com.grupo1.editorprocesos.repository.ArcoRepository;
 import com.grupo1.editorprocesos.repository.GatewayRepository;
 import com.grupo1.editorprocesos.repository.HistorialCambiosRepository;
-import com.grupo1.editorprocesos.repository.UsuarioRepository;
 import com.grupo1.editorprocesos.service.impl.GatewayServiceImpl;
 
-import jakarta.servlet.http.HttpServletRequest;
 
 @ExtendWith(MockitoExtension.class)
 class GatewayServiceImplTest {
@@ -48,16 +46,13 @@ class GatewayServiceImplTest {
     private ProcesoService procesoService;
 
     @Mock
-    private UsuarioRepository usuarioRepository;
+    private com.grupo1.editorprocesos.service.UsuarioActualService usuarioActualService;
 
     @Mock
     private HistorialCambiosRepository historialCambiosRepository;
 
     @Mock
     private ArcoRepository arcoRepository;
-
-    @Mock
-    private HttpServletRequest httpServletRequest;
 
     @InjectMocks
     private GatewayServiceImpl gatewayService;
@@ -92,8 +87,7 @@ class GatewayServiceImplTest {
         gateway.setTipoGateway(TipoGateway.EXCLUSIVO);
         gateway.setProceso(proceso);
 
-        org.mockito.Mockito.lenient().when(httpServletRequest.getHeader("X-User-Email")).thenReturn("test@empresa.com");
-        org.mockito.Mockito.lenient().when(usuarioRepository.findByEmail("test@empresa.com")).thenReturn(Optional.of(usuario));
+        org.mockito.Mockito.lenient().when(usuarioActualService.obtenerUsuarioActual()).thenReturn(usuario);
     }
 
     @Test
@@ -310,7 +304,7 @@ class GatewayServiceImplTest {
 
     @Test
     void obtenerUsuarioActual_sinHeader() {
-        when(httpServletRequest.getHeader("X-User-Email")).thenReturn(null);
+        when(usuarioActualService.obtenerUsuarioActual()).thenThrow(new UnauthorizedException("No se proporcionó el header X-User-Email para identificar al usuario"));
         when(procesoService.obtenerEntityById(5L)).thenReturn(proceso);
 
         GatewayDTO dto = new GatewayDTO();
@@ -330,8 +324,7 @@ class GatewayServiceImplTest {
         otraEm.setId(99L);
         usuarioOtra.setEmpresa(otraEm);
 
-        when(httpServletRequest.getHeader("X-User-Email")).thenReturn("otra@emp.com");
-        when(usuarioRepository.findByEmail("otra@emp.com")).thenReturn(Optional.of(usuarioOtra));
+        when(usuarioActualService.obtenerUsuarioActual()).thenReturn(usuarioOtra);
         when(procesoService.obtenerEntityById(5L)).thenReturn(proceso);
 
         GatewayDTO dto = new GatewayDTO();

@@ -17,10 +17,9 @@ import com.grupo1.editorprocesos.repository.HistorialCambiosRepository;
 import com.grupo1.editorprocesos.service.LaneService;
 import com.grupo1.editorprocesos.repository.LaneRepository;
 import com.grupo1.editorprocesos.repository.ProcesoRepository;
-import com.grupo1.editorprocesos.repository.UsuarioRepository;
 import com.grupo1.editorprocesos.service.ActividadService;
 import com.grupo1.editorprocesos.service.PermisosPoolService;
-import jakarta.servlet.http.HttpServletRequest;
+import com.grupo1.editorprocesos.service.UsuarioActualService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,12 +36,11 @@ public class ActividadServiceImpl implements ActividadService {
 
     private final ActividadRepository actividadRepository;
     private final ProcesoRepository procesoRepository;
-    private final UsuarioRepository usuarioRepository;
     private final HistorialCambiosRepository historialCambiosRepository;
     private final ArcoRepository arcoRepository;
     private final LaneService laneService;
     private final LaneRepository laneRepository;
-    private final HttpServletRequest httpServletRequest;
+    private final UsuarioActualService usuarioActualService;
     private final PermisosPoolService permisosPoolService;
 
     // =====================================================================================
@@ -62,7 +60,7 @@ public class ActividadServiceImpl implements ActividadService {
                         "Proceso no encontrado con ID: " + actividadDTO.getProceso().getId()));
 
         // 2. Validar que el usuario actual pertenezca a la empresa del proceso
-        Usuario usuarioActual = obtenerUsuarioActual();
+        Usuario usuarioActual = usuarioActualService.obtenerUsuarioActual();
         Empresa empresa = proceso.getPool().getEmpresa();
         validarUsuarioPertenecAEmpresa(usuarioActual, empresa);
         permisosPoolService.validarPermisoEscritura(usuarioActual);
@@ -114,7 +112,7 @@ public class ActividadServiceImpl implements ActividadService {
 
         // 2. Validar pertenencia a empresa
         Proceso proceso = actividad.getProceso();
-        Usuario usuarioActual = obtenerUsuarioActual();
+        Usuario usuarioActual = usuarioActualService.obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, proceso.getPool().getEmpresa());
         permisosPoolService.validarPermisoEscritura(usuarioActual);
 
@@ -197,7 +195,7 @@ public class ActividadServiceImpl implements ActividadService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Proceso no encontrado con ID: " + procesoId));
 
-        Usuario usuarioActual = obtenerUsuarioActual();
+        Usuario usuarioActual = usuarioActualService.obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, proceso.getPool().getEmpresa());
 
         return actividadRepository.findByProcesoId(procesoId).stream()
@@ -219,7 +217,7 @@ public class ActividadServiceImpl implements ActividadService {
 
         // 2. Validar usuario y empresa
         Proceso proceso = actividad.getProceso();
-        Usuario usuarioActual = obtenerUsuarioActual();
+        Usuario usuarioActual = usuarioActualService.obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, proceso.getPool().getEmpresa());
 
         String nombreActividad = actividad.getNombre();
@@ -305,15 +303,7 @@ public class ActividadServiceImpl implements ActividadService {
         historialCambiosRepository.save(historial);
     }
 
-    private Usuario obtenerUsuarioActual() {
-        String email = httpServletRequest.getHeader("X-User-Email");
-        if (email == null || email.isBlank()) {
-            throw new UnauthorizedException("No se proporcionó el header X-User-Email para identificar al usuario");
-        }
-        return usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new UnauthorizedException(
-                        "Usuario no encontrado con el email: " + email));
-    }
+
 
     private void validarUsuarioPertenecAEmpresa(Usuario usuario, Empresa empresa) {
         if (usuario.getEmpresa() == null

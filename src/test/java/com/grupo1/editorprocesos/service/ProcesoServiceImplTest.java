@@ -28,7 +28,6 @@ import com.grupo1.editorprocesos.model.enums.EstadoProceso;
 import com.grupo1.editorprocesos.model.enums.RolSistema;
 import com.grupo1.editorprocesos.repository.HistorialCambiosRepository;
 import com.grupo1.editorprocesos.repository.ProcesoRepository;
-import com.grupo1.editorprocesos.repository.UsuarioRepository;
 import com.grupo1.editorprocesos.service.impl.ProcesoServiceImpl;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -49,7 +48,7 @@ class ProcesoServiceImplTest {
     private EmpresaService empresaService;
 
     @Mock
-    private UsuarioRepository usuarioRepository;
+    private com.grupo1.editorprocesos.service.UsuarioActualService usuarioActualService;
 
     @Mock
     private HistorialCambiosRepository historialCambiosRepository;
@@ -89,8 +88,7 @@ class ProcesoServiceImplTest {
         proceso.setPool(pool);
         proceso.setEstado(EstadoProceso.BORRADOR);
 
-        org.mockito.Mockito.lenient().when(httpServletRequest.getHeader("X-User-Email")).thenReturn("test@empresa.com");
-        org.mockito.Mockito.lenient().when(usuarioRepository.findByEmail("test@empresa.com")).thenReturn(Optional.of(usuario));
+        org.mockito.Mockito.lenient().when(usuarioActualService.obtenerUsuarioActual()).thenReturn(usuario);
     }
 
     @Test
@@ -339,7 +337,7 @@ class ProcesoServiceImplTest {
 
     @Test
     void obtenerUsuarioActual_headerVacio() {
-        org.mockito.Mockito.when(httpServletRequest.getHeader("X-User-Email")).thenReturn("");
+        when(usuarioActualService.obtenerUsuarioActual()).thenThrow(new UnauthorizedException("No se proporcionó el header X-User-Email para identificar al usuario"));
         
         ProcesoDTO dto = new ProcesoDTO();
         dto.setPool(new com.grupo1.editorprocesos.dto.ReferenciaDTO(2L, null));
@@ -351,8 +349,7 @@ class ProcesoServiceImplTest {
 
     @Test
     void obtenerUsuarioActual_usuarioNoEncontrado() {
-        org.mockito.Mockito.when(httpServletRequest.getHeader("X-User-Email")).thenReturn("noexiste@empresa.com");
-        when(usuarioRepository.findByEmail("noexiste@empresa.com")).thenReturn(Optional.empty());
+        when(usuarioActualService.obtenerUsuarioActual()).thenThrow(new UnauthorizedException("Usuario no encontrado con el email: noexiste@empresa.com"));
 
         ProcesoDTO dto = new ProcesoDTO();
         dto.setPool(new com.grupo1.editorprocesos.dto.ReferenciaDTO(2L, null));

@@ -15,10 +15,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
 
 import com.grupo1.editorprocesos.dto.EmpresaDTO;
+import com.grupo1.editorprocesos.model.entity.core.Empresa;
 import com.grupo1.editorprocesos.exception.DuplicateResourceException;
 import com.grupo1.editorprocesos.exception.ResourceNotFoundException;
-import com.grupo1.editorprocesos.model.entity.core.Empresa;
 import com.grupo1.editorprocesos.repository.EmpresaRepository;
+import com.grupo1.editorprocesos.repository.PoolRepository;
 import com.grupo1.editorprocesos.service.impl.EmpresaServiceImpl;
 
 @ExtendWith(MockitoExtension.class)
@@ -32,6 +33,9 @@ class EmpresaServiceImplTest {
 
     @Mock
     private UsuarioService usuarioService;
+
+    @Mock
+    private PoolRepository poolRepository;
 
     @InjectMocks
     private EmpresaServiceImpl empresaService;

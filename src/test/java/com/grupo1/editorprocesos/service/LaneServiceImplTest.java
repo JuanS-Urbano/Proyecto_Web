@@ -24,10 +24,8 @@ import com.grupo1.editorprocesos.model.entity.process.Lane;
 import com.grupo1.editorprocesos.model.entity.process.Proceso;
 import com.grupo1.editorprocesos.model.entity.process.RolProceso;
 import com.grupo1.editorprocesos.repository.LaneRepository;
-import com.grupo1.editorprocesos.repository.UsuarioRepository;
 import com.grupo1.editorprocesos.service.impl.LaneServiceImpl;
 
-import jakarta.servlet.http.HttpServletRequest;
 
 @SuppressWarnings({"java:S5778"})
 @ExtendWith(MockitoExtension.class)
@@ -43,10 +41,7 @@ class LaneServiceImplTest {
     private RolProcesoService rolProcesoService;
 
     @Mock
-    private UsuarioRepository usuarioRepository;
-
-    @Mock
-    private HttpServletRequest httpServletRequest;
+    private com.grupo1.editorprocesos.service.UsuarioActualService usuarioActualService;
 
     @Mock
     private com.grupo1.editorprocesos.service.PermisosPoolService permisosPoolService;
@@ -77,10 +72,7 @@ class LaneServiceImplTest {
         usuario.setEmail("user@company.com");
         usuario.setEmpresa(empresa);
 
-        // Estos stubbings se aplican en la mayoría de los tests, pero algunos tests
-        // terminan antes de necesitarlos, por eso se definen como lenient.
-        org.mockito.Mockito.lenient().when(httpServletRequest.getHeader("X-User-Email")).thenReturn(usuario.getEmail());
-        org.mockito.Mockito.lenient().when(usuarioRepository.findByEmail(usuario.getEmail())).thenReturn(Optional.of(usuario));
+        org.mockito.Mockito.lenient().when(usuarioActualService.obtenerUsuarioActual()).thenReturn(usuario);
     }
 
     @Test
@@ -250,7 +242,7 @@ class LaneServiceImplTest {
 
         // Inyectamos esto
         laneService = new LaneServiceImpl(laneRepository, procesoService, rolProcesoService,
-                usuarioRepository, actividadRepository, httpServletRequest, permisosPoolService);
+                actividadRepository, usuarioActualService, permisosPoolService);
 
         laneService.eliminarLane(1L);
 
@@ -272,7 +264,7 @@ class LaneServiceImplTest {
 
         // Inyectamos esto
         laneService = new LaneServiceImpl(laneRepository, procesoService, rolProcesoService,
-                usuarioRepository, actividadRepository, httpServletRequest, permisosPoolService);
+                actividadRepository, usuarioActualService, permisosPoolService);
 
         assertThatThrownBy(() -> laneService.eliminarLane(1L))
                 .isInstanceOf(IllegalStateException.class);

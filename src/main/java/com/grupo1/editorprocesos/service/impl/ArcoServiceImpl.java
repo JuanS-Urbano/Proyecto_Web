@@ -17,10 +17,9 @@ import com.grupo1.editorprocesos.repository.ArcoRepository;
 import com.grupo1.editorprocesos.repository.GatewayRepository;
 import com.grupo1.editorprocesos.repository.HistorialCambiosRepository;
 import com.grupo1.editorprocesos.service.ProcesoService;
-import com.grupo1.editorprocesos.repository.UsuarioRepository;
 import com.grupo1.editorprocesos.service.ArcoService;
 import com.grupo1.editorprocesos.service.PermisosPoolService;
-import jakarta.servlet.http.HttpServletRequest;
+import com.grupo1.editorprocesos.service.UsuarioActualService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,11 +36,10 @@ public class ArcoServiceImpl implements ArcoService {
 
     private final ArcoRepository arcoRepository;
     private final ProcesoService procesoService;
-    private final UsuarioRepository usuarioRepository;
     private final HistorialCambiosRepository historialCambiosRepository;
     private final ActividadRepository actividadRepository;
     private final GatewayRepository gatewayRepository;
-    private final HttpServletRequest httpServletRequest;
+    private final UsuarioActualService usuarioActualService;
     private final PermisosPoolService permisosPoolService;
 
     // =====================================================================================
@@ -58,7 +56,7 @@ public class ArcoServiceImpl implements ArcoService {
         Proceso proceso = procesoService.obtenerEntityById(arcoDTO.getProceso().getId());
 
         // 2. Validar que el usuario actual pertenezca a la empresa del proceso
-        Usuario usuarioActual = obtenerUsuarioActual();
+        Usuario usuarioActual = usuarioActualService.obtenerUsuarioActual();
         Empresa empresa = proceso.getPool().getEmpresa();
         validarUsuarioPertenecAEmpresa(usuarioActual, empresa);
         permisosPoolService.validarPermisoEscritura(usuarioActual);
@@ -108,7 +106,7 @@ public class ArcoServiceImpl implements ArcoService {
 
         // 2. Validar pertenencia a empresa
         Proceso proceso = arco.getProceso();
-        Usuario usuarioActual = obtenerUsuarioActual();
+        Usuario usuarioActual = usuarioActualService.obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, proceso.getPool().getEmpresa());
         permisosPoolService.validarPermisoEscritura(usuarioActual);
 
@@ -173,7 +171,7 @@ public class ArcoServiceImpl implements ArcoService {
     public List<ArcoDTO> listarArcosPorProceso(Long procesoId) {
         Proceso proceso = procesoService.obtenerEntityById(procesoId);
 
-        Usuario usuarioActual = obtenerUsuarioActual();
+        Usuario usuarioActual = usuarioActualService.obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, proceso.getPool().getEmpresa());
 
         return arcoRepository.findByProcesoId(procesoId).stream()
@@ -189,7 +187,7 @@ public class ArcoServiceImpl implements ArcoService {
                         ARCO_NO_ENCONTRADO + id));
 
         Proceso proceso = arco.getProceso();
-        Usuario usuarioActual = obtenerUsuarioActual();
+        Usuario usuarioActual = usuarioActualService.obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, proceso.getPool().getEmpresa());
 
         arcoRepository.delete(arco);
@@ -219,15 +217,7 @@ public class ArcoServiceImpl implements ArcoService {
         historialCambiosRepository.save(historial);
     }
 
-    private Usuario obtenerUsuarioActual() {
-        String email = httpServletRequest.getHeader("X-User-Email");
-        if (email == null || email.isBlank()) {
-            throw new UnauthorizedException("No se proporcionó el header X-User-Email para identificar al usuario");
-        }
-        return usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new UnauthorizedException(
-                        "Usuario no encontrado con el email: " + email));
-    }
+
 
     private void validarUsuarioPertenecAEmpresa(Usuario usuario, Empresa empresa) {
         if (usuario.getEmpresa() == null

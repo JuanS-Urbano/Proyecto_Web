@@ -8,6 +8,7 @@ import com.grupo1.editorprocesos.service.UsuarioService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,6 +21,7 @@ public class UsuarioController {
     private final UsuarioService usuarioService;
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN_EMPRESA', 'ADMIN_PLATAFORMA')")
     public ResponseEntity<ApiResponse<UsuarioDTO>> crearUsuario(@RequestBody UsuarioCreateDTO usuarioCreateDTO) {
         UsuarioDTO creado = usuarioService.crearUsuario(usuarioCreateDTO);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -33,6 +35,7 @@ public class UsuarioController {
     }
 
     @PutMapping("/{id}/rol")
+    @PreAuthorize("hasAnyRole('ADMIN_EMPRESA', 'ADMIN_PLATAFORMA')")
     public ResponseEntity<ApiResponse<UsuarioDTO>> cambiarRol(
             @PathVariable Long id,
             @RequestParam RolSistema nuevoRol) {

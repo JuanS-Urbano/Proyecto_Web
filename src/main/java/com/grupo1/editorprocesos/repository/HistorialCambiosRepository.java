@@ -21,4 +21,7 @@ public interface HistorialCambiosRepository extends JpaRepository<HistorialCambi
      */
     @Query("SELECT u.id, u.email FROM Usuario u WHERE u.id IN :ids")
     List<Object[]> findEmailsByUsuarioIds(@Param("ids") Set<Long> ids);
+
+    @Query("SELECT h FROM HistorialCambios h JOIN FETCH h.proceso WHERE h.proceso.pool.empresa.id = :empresaId ORDER BY h.fecha DESC")
+    List<HistorialCambios> findRecentByEmpresaId(@Param("empresaId") Long empresaId, org.springframework.data.domain.Pageable pageable);
 }

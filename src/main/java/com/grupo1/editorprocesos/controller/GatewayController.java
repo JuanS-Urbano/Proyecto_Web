@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -61,6 +62,7 @@ public class GatewayController {
      * La lógica de reconexión/huérfanos es ejecutada dentro del servicio.
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN_EMPRESA', 'ADMIN_PLATAFORMA')")
     public ResponseEntity<ApiResponse<Void>> eliminarGateway(
             @PathVariable Long id,
             @RequestParam(name = "confirmar", defaultValue = "false") boolean confirmar) {

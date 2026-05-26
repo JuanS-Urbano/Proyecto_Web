@@ -12,10 +12,9 @@ import com.grupo1.editorprocesos.repository.ActividadRepository;
 import com.grupo1.editorprocesos.repository.LaneRepository;
 import com.grupo1.editorprocesos.service.ProcesoService;
 import com.grupo1.editorprocesos.service.RolProcesoService;
-import com.grupo1.editorprocesos.repository.UsuarioRepository;
 import com.grupo1.editorprocesos.service.LaneService;
 import com.grupo1.editorprocesos.service.PermisosPoolService;
-import jakarta.servlet.http.HttpServletRequest;
+import com.grupo1.editorprocesos.service.UsuarioActualService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,9 +29,8 @@ public class LaneServiceImpl implements LaneService {
     private final LaneRepository laneRepository;
     private final ProcesoService procesoService;
     private final RolProcesoService rolProcesoService;
-    private final UsuarioRepository usuarioRepository;
     private final ActividadRepository actividadRepository;
-    private final HttpServletRequest httpServletRequest;
+    private final UsuarioActualService usuarioActualService;
     private final PermisosPoolService permisosPoolService;
 
     @Override
@@ -40,7 +38,7 @@ public class LaneServiceImpl implements LaneService {
     public LaneDTO crearLane(Long procesoId, LaneDTO laneDTO) {
         Proceso proceso = procesoService.obtenerEntityById(procesoId);
 
-        Usuario usuarioActual = obtenerUsuarioActual();
+        Usuario usuarioActual = usuarioActualService.obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, proceso.getPool().getEmpresa());
         permisosPoolService.validarPermisoEscritura(usuarioActual);
 
@@ -77,7 +75,7 @@ public class LaneServiceImpl implements LaneService {
     public List<LaneDTO> listarLanesPorProceso(Long procesoId) {
         Proceso proceso = procesoService.obtenerEntityById(procesoId);
 
-        Usuario usuarioActual = obtenerUsuarioActual();
+        Usuario usuarioActual = usuarioActualService.obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, proceso.getPool().getEmpresa());
 
         return laneRepository.findByProcesoId(procesoId).stream()
@@ -121,7 +119,7 @@ public class LaneServiceImpl implements LaneService {
         Lane lane = obtenerLaneEntity(laneId);
 
         Proceso proceso = lane.getProceso();
-        Usuario usuarioActual = obtenerUsuarioActual();
+        Usuario usuarioActual = usuarioActualService.obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, proceso.getPool().getEmpresa());
         permisosPoolService.validarPermisoEscritura(usuarioActual);
 
@@ -166,7 +164,7 @@ public class LaneServiceImpl implements LaneService {
     public void eliminarLane(Long laneId) {
         Lane lane = obtenerLaneEntity(laneId);
 
-        Usuario usuarioActual = obtenerUsuarioActual();
+        Usuario usuarioActual = usuarioActualService.obtenerUsuarioActual();
         validarUsuarioPertenecAEmpresa(usuarioActual, lane.getProceso().getPool().getEmpresa());
         permisosPoolService.validarPermisoEscritura(usuarioActual);
 
@@ -195,15 +193,7 @@ public class LaneServiceImpl implements LaneService {
         return dto;
     }
 
-    private Usuario obtenerUsuarioActual() {
-        String email = httpServletRequest.getHeader("X-User-Email");
-        if (email == null || email.isBlank()) {
-            throw new UnauthorizedException("No se proporcionó el header X-User-Email para identificar al usuario");
-        }
-        return usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new UnauthorizedException(
-                        "Usuario no encontrado con el email: " + email));
-    }
+
 
     private void validarUsuarioPertenecAEmpresa(Usuario usuario, Empresa empresa) {
         if (usuario.getEmpresa() == null
